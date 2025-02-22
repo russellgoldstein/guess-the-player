@@ -10,11 +10,21 @@ const CreateAccountPage = () => {
 
     const handleCreateAccount = async (e: React.FormEvent) => {
         e.preventDefault();
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) {
-            console.error('Error creating account:', error.message);
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+
+        if (signUpError) {
+            console.error('Error creating account:', signUpError.message);
         } else {
-            // Redirect to the login page or another page after successful account creation
+            const userId = signUpData.user?.id;
+            if (userId) {
+                // Insert the new user into the users table
+                const { error: insertError } = await supabase.from('users').insert([{ id: userId, email, username: email }]);
+                if (insertError) {
+                    console.error('Error inserting user into users table:', insertError.message);
+                } else {
+                    // Redirect to the login page or another page after successful account creation
+                }
+            }
         }
     };
 

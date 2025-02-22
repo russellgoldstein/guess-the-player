@@ -1,60 +1,53 @@
-import React, { useState } from 'react';
-import { useCombobox } from 'downshift';
-
-const players = [
-    // Example player data
-    { name: 'Babe Ruth', id: '1' },
-    { name: 'Hank Aaron', id: '2' },
-    { name: 'Willie Mays', id: '3' },
-];
+import React, { useState, useEffect } from 'react';
+import { AutoComplete, type Option } from '@/components/ui/autocomplete';
 
 interface Player {
-    id: string;
-    name: string;
+    id: number;
+    fullName: string;
 }
 
 interface PlayerSearchProps {
-    onPlayerSelect: (player: Player) => void;
+    onPlayerSelect: (playerId: number) => void;
 }
 
 const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) => {
-    const {
-        isOpen,
-        getMenuProps,
-        getInputProps,
-        getItemProps,
-        highlightedIndex,
-    } = useCombobox({
-        items: players,
-        itemToString: (item) => (item ? item.name : ''),
-        onSelectedItemChange: ({ selectedItem }) => {
-            if (selectedItem) {
-                onPlayerSelect(selectedItem);
-            }
-        },
-    });
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [inputValue, setInputValue] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchPlayers = async () => {
+            if (inputValue.length < 3) return; // Fetch only if input is 3 or more characters
+            setIsLoading(true);
+            const response = await fetch(`https://statsapi.mlb.com/api/v1/people/search?names=${inputValue}`);
+            const data = await response.json();
+            setPlayers(data.people);
+            setIsLoading(false);
+        };
+
+        fetchPlayers();
+    }, [inputValue]);
+
+    const options: Option[] = players.map(player => ({
+        value: player.id.toString(),
+        label: player.fullName
+    }));
+
+    const handleValueChange = (selectedOption: Option) => {
+        console.log(selectedOption);
+        onPlayerSelect(Number(selectedOption.value));
+    };
 
     return (
-        <div>
-            <input {...getInputProps()} placeholder="Search for a player" />
-            <ul {...getMenuProps()}>
-                {isOpen &&
-                    players.map((player, index) => {
-                        const itemProps = getItemProps({ index, item: player });
-                        return (
-                            <li
-                                key={player.id}
-                                {...itemProps}
-                                style={{
-                                    backgroundColor: highlightedIndex === index ? '#bde4ff' : 'white',
-                                }}
-                            >
-                                {player.name}
-                            </li>
-                        );
-                    })}
-            </ul>
-        </div>
+        <AutoComplete
+            options={options}
+            emptyMessage="No players found."
+            placeholder="Search for a player"
+            isLoading={isLoading}
+            onValueChange={handleValueChange}
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+        />
     );
 };
 

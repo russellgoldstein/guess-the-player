@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import PlayerSearch from '../src/components/PlayerSearch';
 import PlayerStatsConfig from '../src/components/PlayerStatsConfig';
 import { supabase } from '../src/lib/supabaseClient';
+import PlayerStats from '@/src/components/PlayerStats';
 
 interface Player {
   id: string;
@@ -58,7 +59,7 @@ const CreateGamePage = () => {
     const userId = session.user.id; // Get the user's UUID
 
     const { data, error } = await supabase.from('games').insert([
-      { title: `Game for ${selectedPlayer.name}`, creator_id: userId },
+      { title: `Game for ${selectedPlayer}`, creator_id: userId },
     ]).select('id');
 
     if (error || !data || data.length === 0) {
@@ -69,7 +70,7 @@ const CreateGamePage = () => {
     const gameId = data[0].id;
 
     await supabase.from('game_player_config').insert([
-      { game_id: gameId, player_id: selectedPlayer.id, hidden_stats: hiddenStats },
+      { game_id: gameId, player_id: selectedPlayer, hidden_stats: hiddenStats },
     ]);
 
     const generatedLink = `${window.location.origin}/game/${gameId}`;
@@ -82,7 +83,7 @@ const CreateGamePage = () => {
       <PlayerSearch onPlayerSelect={handlePlayerSelect} />
       {selectedPlayer && (
         <>
-          <PlayerStatsConfig player={selectedPlayer} onStatsChange={handleStatsChange} />
+          <PlayerStats playerId={Number(selectedPlayer)} configurable={true} />
           <button onClick={saveGameConfiguration}>Generate Link</button>
           {link && <p>Shareable Link: <a href={link}>{link}</a></p>}
         </>

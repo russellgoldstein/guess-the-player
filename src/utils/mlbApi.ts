@@ -80,8 +80,37 @@ export const filterPlayerInfo = (playerData: any): Partial<PlayerInfo> => {
     return filteredData;
 };
 
-export const filterHittingStats = (statsData: any[]): Partial<HittingStats>[] => {
-    return statsData.map(entry => {
+interface StatEntry {
+    season: string;
+    stat: Record<string, any>;
+    team: {
+        name: string;
+    };
+    numTeams?: number;
+}
+
+export const filterHittingStats = (statsData: StatEntry[]): Partial<HittingStats>[] => {
+    // Group stats by season
+    const statsBySeason = statsData.reduce((acc, entry) => {
+        const season = entry.season;
+        if (!acc[season]) {
+            acc[season] = [];
+        }
+        acc[season].push(entry);
+        return acc;
+    }, {} as Record<string, StatEntry[]>);
+
+    // For each season, if there are multiple entries, use the one with numTeams
+    const filteredStats = Object.values(statsBySeason).map((seasonEntries: StatEntry[]) => {
+        if (seasonEntries.length === 1) {
+            return seasonEntries[0];
+        }
+        // If multiple entries, find the one with numTeams (full season stats)
+        const fullSeasonEntry = seasonEntries.find(entry => entry.numTeams);
+        return fullSeasonEntry || seasonEntries[0];
+    });
+
+    return filteredStats.map(entry => {
         const filteredEntry = { ...entry.stat };
 
         // Remove excluded fields
@@ -99,8 +128,28 @@ export const filterHittingStats = (statsData: any[]): Partial<HittingStats>[] =>
     });
 };
 
-export const filterPitchingStats = (statsData: any[]): Partial<PitchingStats>[] => {
-    return statsData.map(entry => {
+export const filterPitchingStats = (statsData: StatEntry[]): Partial<PitchingStats>[] => {
+    // Group stats by season
+    const statsBySeason = statsData.reduce((acc, entry) => {
+        const season = entry.season;
+        if (!acc[season]) {
+            acc[season] = [];
+        }
+        acc[season].push(entry);
+        return acc;
+    }, {} as Record<string, StatEntry[]>);
+
+    // For each season, if there are multiple entries, use the one with numTeams
+    const filteredStats = Object.values(statsBySeason).map((seasonEntries: StatEntry[]) => {
+        if (seasonEntries.length === 1) {
+            return seasonEntries[0];
+        }
+        // If multiple entries, find the one with numTeams (full season stats)
+        const fullSeasonEntry = seasonEntries.find(entry => entry.numTeams);
+        return fullSeasonEntry || seasonEntries[0];
+    });
+
+    return filteredStats.map(entry => {
         const filteredEntry = { ...entry.stat };
 
         // Remove excluded fields

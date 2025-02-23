@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { playerInfoMappings, hittingStatMappings, pitchingStatMappings, StatMapping } from '../utils/statMappings';
-import { PlayerInfo, PlayerStatsProps, HittingStats, PitchingStats } from '../types/player';
+import { PlayerInfo, HittingStats, PitchingStats } from '../types/player';
 import { ConfigurableHeader } from './ConfigurableHeader';
 import { ConfigurableText } from './ConfigurableText';
 import { SectionToggle } from './SectionToggle';
@@ -17,6 +17,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
+interface PlayerStatsProps {
+    playerId: number;
+    configurable?: boolean;
+    selectedInfo: string[];
+    deselectedInfo: string[];
+    selectedHittingStats: string[];
+    deselectedHittingStats: string[];
+    selectedPitchingStats: string[];
+    deselectedPitchingStats: string[];
+    onStatsChange: (type: 'info' | 'hitting' | 'pitching', selected: string[], deselected: string[]) => void;
+    showAllStats?: boolean;
+}
+
 const PlayerStats: React.FC<PlayerStatsProps> = ({
     playerId,
     configurable = false,
@@ -26,7 +39,8 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     deselectedHittingStats,
     selectedPitchingStats,
     deselectedPitchingStats,
-    onStatsChange
+    onStatsChange,
+    showAllStats = false
 }) => {
     const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
     const [hittingStats, setHittingStats] = useState<Partial<HittingStats>[]>([]);
@@ -132,7 +146,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     };
 
     const filterVisibleStats = <T extends object>(stats: T, selectedKeys: string[]): T => {
-        if (configurable) {
+        if (configurable || showAllStats) {
             return stats;
         }
         const filteredStats = { ...stats };
@@ -152,13 +166,11 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     };
 
     const getVisibleKeys = (allKeys: string[], selected: string[], deselected: string[]) => {
-        console.log({ allKeys, selected, deselected })
-        // When configurable is true, show all columns
-        if (configurable) {
+        // When configurable is true or showAllStats is true, show all columns
+        if (configurable || showAllStats) {
             return allKeys;
         }
         // When not configurable, only show selected columns
-        console.log(allKeys.filter(key => !deselected.includes(key)))
         return allKeys.filter(key => !deselected.includes(key));
     };
 
@@ -190,9 +202,9 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     );
 
     const visiblePlayerInfo = filterVisibleStats(playerInfo, selectedInfo);
-    const hasVisibleInfo = configurable || selectedInfo.length > 0;
-    const hasVisibleHitting = configurable || selectedHittingStats.length > 0;
-    const hasVisiblePitching = configurable || selectedPitchingStats.length > 0;
+    const hasVisibleInfo = configurable || showAllStats || selectedInfo.length > 0;
+    const hasVisibleHitting = configurable || showAllStats || selectedHittingStats.length > 0;
+    const hasVisiblePitching = configurable || showAllStats || selectedPitchingStats.length > 0;
 
     const sortedInfoKeys = getSortedKeys(visiblePlayerInfo, playerInfoMappings);
     const sortedHittingKeys = hittingStats.length > 0 ? getSortedKeys(hittingStats[0], hittingStatMappings) : [];
@@ -205,7 +217,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                 <div className="flex gap-6">
                     <div className="shrink-0">
                         <Avatar className="h-32 w-32 rounded-lg border-2 border-gray-100 shadow-sm">
-                            <AvatarImage src={configurable === true ? playerInfo.imageUrl : 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/1/headshot/67/current'} alt={configurable === true ? playerInfo.fullName : 'Player'} />
+                            <AvatarImage src={configurable === true || showAllStats === true ? playerInfo.imageUrl : 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/1/headshot/67/current'} alt={configurable === true || showAllStats === true ? playerInfo.fullName : 'Player'} />
                             <AvatarFallback className="text-3xl bg-mlb-blue text-white">{playerInfo.fullName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                     </div>

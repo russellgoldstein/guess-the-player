@@ -15,6 +15,7 @@ import {
 } from "../../../src/components/ui/dialog";
 import { Player } from '../../../src/types/player';
 import { PageWrapper } from '@/src/components/PageWrapper';
+import { User } from '@supabase/supabase-js';
 
 const GamePage = () => {
     const { gameId } = useParams();
@@ -24,6 +25,18 @@ const GamePage = () => {
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [guessResult, setGuessResult] = useState<'correct' | 'incorrect' | null>(null);
     const [currentGuess, setCurrentGuess] = useState<Player | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const checkUserSession = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession();
+            setUser(session?.user || null);
+        };
+
+        checkUserSession();
+    }, []);
 
     useEffect(() => {
         const fetchGame = async () => {
@@ -70,12 +83,26 @@ const GamePage = () => {
         setShowConfirmDialog(true);
     };
 
-    const handleConfirmGuess = () => {
+    const handleConfirmGuess = async () => {
         if (!currentGuess || !game?.game_player_config[0]) return;
 
         const isCorrect = currentGuess.id === Number(game.game_player_config[0].player_id);
         setGuessResult(isCorrect ? 'correct' : 'incorrect');
         setShowConfirmDialog(false);
+
+        // Save the guess if user is authenticated
+        if (user) {
+            try {
+                await supabase.from('user_guesses').insert([{
+                    game_id: gameId,
+                    user_id: user.id,
+                    guess: currentGuess.id,
+                    is_correct: isCorrect
+                }]);
+            } catch (error) {
+                console.error('Error saving guess:', error);
+            }
+        }
     };
 
     if (isLoading) {
@@ -121,6 +148,11 @@ const GamePage = () => {
                     <div className="space-y-2">
                         <h1 className="text-3xl sm:text-4xl font-bold text-mlb-blue">Guess the Player</h1>
                         <p className="text-gray-600">Try to guess the player based on their stats.</p>
+                        {!user && (
+                            <p className="text-sm text-blue-600">
+                                Playing as guest. Sign in to save your guesses and track your progress.
+                            </p>
+                        )}
                     </div>
 
                     <div className="max-w-xl">

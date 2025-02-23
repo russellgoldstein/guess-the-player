@@ -12,7 +12,7 @@ export async function POST(request: Request) {
         .from('games')
         .insert([{
             title,
-            creator_id
+            creator_id: creator_id || null // Allow null creator_id for anonymous users
         }])
         .select()
         .single();

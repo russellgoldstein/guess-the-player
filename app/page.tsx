@@ -27,6 +27,10 @@ interface StatsConfig {
   };
 }
 
+interface User {
+  id: string;
+}
+
 const CreateGamePage = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [statsConfig, setStatsConfig] = useState<StatsConfig>({
@@ -35,19 +39,14 @@ const CreateGamePage = () => {
     pitching: { selected: [], deselected: [] }
   });
   const [link, setLink] = useState('');
-  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const checkUserSession = async () => {
       const {
         data: { session },
-        error: sessionError
       } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        console.error('User not logged in:', sessionError);
-        router.push('/login');
-      }
+      setUser(session?.user || null);
     };
 
     checkUserSession();
@@ -70,16 +69,6 @@ const CreateGamePage = () => {
   const saveGameConfiguration = async () => {
     if (!selectedPlayer) return;
 
-    const {
-      data: { session },
-      error: sessionError
-    } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-      console.error('Error retrieving user session:', sessionError);
-      return;
-    }
-
     try {
       const response = await fetch('/api/games', {
         method: 'POST',
@@ -88,7 +77,7 @@ const CreateGamePage = () => {
         },
         body: JSON.stringify({
           title: `Game for ${selectedPlayer.fullName}`,
-          creator_id: session.user.id,
+          creator_id: user?.id || null,
           player_id: selectedPlayer.id,
           stats_config: {
             info: {
@@ -125,6 +114,11 @@ const CreateGamePage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 space-y-4">
           <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+            {!user && (
+              <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-md">
+                <p>You are creating a game as a guest. Sign in to save your games and track your history.</p>
+              </div>
+            )}
             <button
               onClick={saveGameConfiguration}
               className="bg-mlb-blue hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"

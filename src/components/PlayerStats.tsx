@@ -31,35 +31,47 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     const [playerInfo, setPlayerInfo] = useState<PlayerInfo | null>(null);
     const [hittingStats, setHittingStats] = useState<Partial<HittingStats>[]>([]);
     const [pitchingStats, setPitchingStats] = useState<Partial<PitchingStats>[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const loadPlayerData = async () => {
+            if (!playerId) {
+                setError("No player ID provided");
+                setIsLoading(false);
+                return;
+            }
+
+            setIsLoading(true);
+            setError(null);
+
             try {
                 const data = await fetchPlayerData(playerId);
 
-                if (data.playerInfo) {
-                    setPlayerInfo(data.playerInfo as PlayerInfo);
-                    if (configurable) {
-                        // Initialize all player info stats as deselected
-                        onStatsChange('info', [], Object.keys(data.playerInfo));
-                    }
+                if (!data.playerInfo) {
+                    throw new Error("Player information not found");
                 }
 
-                if (data.hittingStats.length > 0) {
-                    setHittingStats(data.hittingStats);
-                    if (configurable && selectedHittingStats.length === 0) {
+                setPlayerInfo(data.playerInfo as PlayerInfo);
+                setHittingStats(data.hittingStats);
+                setPitchingStats(data.pitchingStats);
+
+                if (configurable) {
+                    onStatsChange('info', [], Object.keys(data.playerInfo));
+
+                    if (data.hittingStats.length > 0 && selectedHittingStats.length === 0) {
                         onStatsChange('hitting', Object.keys(data.hittingStats[0]), []);
                     }
-                }
 
-                if (data.pitchingStats.length > 0) {
-                    setPitchingStats(data.pitchingStats);
-                    if (configurable && selectedPitchingStats.length === 0) {
+                    if (data.pitchingStats.length > 0 && selectedPitchingStats.length === 0) {
                         onStatsChange('pitching', Object.keys(data.pitchingStats[0]), []);
                     }
                 }
             } catch (error) {
+                setError(error instanceof Error ? error.message : "Failed to load player data");
                 console.error('Error loading player data:', error);
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -147,6 +159,27 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         // When not configurable, only show selected columns
         return allKeys.filter(key => !deselected.includes(key));
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px] bg-white rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-center space-y-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mlb-blue mx-auto"></div>
+                    <p className="text-gray-600">Loading player statistics...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px] bg-white rounded-lg border border-red-200">
+                <div className="text-center text-red-600">
+                    <p>Error loading player statistics: {error}</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!playerInfo) return (
         <div className="flex items-center justify-center min-h-[400px]">

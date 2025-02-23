@@ -51,11 +51,11 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) =>
     return (
         <div className="relative">
             <Command
-                className="border border-gray-200 rounded-lg shadow-sm"
+                className="border border-gray-200 rounded-lg shadow-sm bg-white"
                 loop
                 shouldFilter={false}
             >
-                <div className="flex items-center border-b p-2">
+                <div className="flex items-center p-2">
                     <input
                         value={search}
                         onChange={(e) => handleSearch(e.target.value)}
@@ -64,35 +64,35 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) =>
                         placeholder="Search for a player..."
                     />
                 </div>
-                {open && (
-                    <>
-                        {loading && (
-                            <div className="p-4 text-center text-gray-500">
-                                Loading...
-                            </div>
-                        )}
-                        {!loading && players.length > 0 && (
-                            <Command.List className="max-h-[300px] overflow-y-auto">
-                                {players.map((player) => (
-                                    <Command.Item
-                                        key={player.id}
-                                        value={player.fullName}
-                                        onSelect={() => handleSelect(player.id, player.fullName)}
-                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                    >
-                                        {player.fullName}
-                                    </Command.Item>
-                                ))}
-                            </Command.List>
-                        )}
-                        {!loading && search.length >= 2 && players.length === 0 && (
-                            <div className="p-4 text-center text-gray-500">
-                                No players found
-                            </div>
-                        )}
-                    </>
-                )}
             </Command>
+
+            {open && (
+                <div className="absolute top-[100%] left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-[100]">
+                    {loading && (
+                        <div className="p-4 text-center text-gray-500">
+                            Loading...
+                        </div>
+                    )}
+                    {!loading && players.length > 0 && (
+                        <div className="max-h-[300px] overflow-y-auto">
+                            {players.map((player) => (
+                                <div
+                                    key={player.id}
+                                    onClick={() => handleSelect(player.id, player.fullName)}
+                                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                >
+                                    {player.fullName}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {!loading && search.length >= 2 && players.length === 0 && (
+                        <div className="p-4 text-center text-gray-500">
+                            No players found
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }; 

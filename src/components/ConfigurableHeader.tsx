@@ -25,14 +25,25 @@ export const ConfigurableHeader: React.FC<ConfigurableHeaderProps> = ({
 
     const isSelected = selected.includes(statKey);
     const isDeselected = deselected.includes(statKey);
-    const isConfigurable = configurable && (isSelected || !isDeselected);
+
+    const getClassName = () => {
+        if (!configurable) {
+            return 'text-gray-700 cursor-default';
+        }
+
+        if (isSelected) {
+            return 'text-green-600 cursor-pointer hover:text-green-700 transition-colors';
+        }
+
+        if (isDeselected) {
+            return 'text-red-600 cursor-pointer hover:text-red-700 transition-colors';
+        }
+
+        return 'text-gray-700 cursor-pointer hover:text-gray-900 transition-colors';
+    };
 
     return (
-        <div
-            className={`cursor-${configurable ? 'pointer' : 'default'} ${isConfigurable ? '' : 'opacity-50'
-                }`}
-            onClick={handleClick}
-        >
+        <div className={getClassName()} onClick={handleClick}>
             {displayName}
         </div>
     );

@@ -81,11 +81,8 @@ const GamePage = () => {
                     <p className="text-gray-600">Try to guess the player based on their stats.</p>
                 </div>
 
-                <div className="space-y-4">
-                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Make your guess:</h2>
-                    <div className="max-w-xl">
-                        <PlayerSearch onPlayerSelect={handleGuess} />
-                    </div>
+                <div className="max-w-xl">
+                    <PlayerSearch onPlayerSelect={handleGuess} />
                 </div>
 
                 {guessResult !== null && (

@@ -120,8 +120,45 @@ const CreateGamePage = () => {
   };
 
   return (
-    <div>
-      <h1>Create a Game</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+          <button
+            onClick={saveGameConfiguration}
+            className="bg-mlb-blue hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+          >
+            Generate Shareable Link
+          </button>
+          {link && (
+            <div className="mt-4 w-full max-w-2xl">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <span className="text-gray-600 font-medium">Shareable Link:</span>
+                <a
+                  href={link}
+                  className="text-mlb-blue hover:text-blue-700 font-medium truncate flex-1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link}
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(link);
+                  }}
+                  className="text-gray-500 hover:text-mlb-blue p-2 rounded-md transition-colors"
+                  title="Copy to clipboard"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <h1>Search for a Player to Create a Game</h1>
       <PlayerSearch onPlayerSelect={handlePlayerSelect} />
       {selectedPlayer && (
         <>
@@ -136,8 +173,6 @@ const CreateGamePage = () => {
             deselectedPitchingStats={statsConfig.pitching.deselected}
             onStatsChange={handleStatsChange}
           />
-          <button onClick={saveGameConfiguration}>Generate Link</button>
-          {link && <p>Shareable Link: <a href={link}>{link}</a></p>}
         </>
       )}
     </div>

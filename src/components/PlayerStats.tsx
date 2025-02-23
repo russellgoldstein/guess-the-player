@@ -39,8 +39,9 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
 
                 if (data.playerInfo) {
                     setPlayerInfo(data.playerInfo as PlayerInfo);
-                    if (configurable && selectedInfo.length === 0) {
-                        onStatsChange('info', Object.keys(data.playerInfo), []);
+                    if (configurable) {
+                        // Initialize all player info stats as deselected
+                        onStatsChange('info', [], Object.keys(data.playerInfo));
                     }
                 }
 
@@ -138,6 +139,15 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
             .sort((a, b) => (mappings[String(a)]?.order || 0) - (mappings[String(b)]?.order || 0));
     };
 
+    const getVisibleKeys = (allKeys: string[], selected: string[], deselected: string[]) => {
+        // When configurable is true, show all columns
+        if (configurable) {
+            return allKeys;
+        }
+        // When not configurable, only show selected columns
+        return allKeys.filter(key => !deselected.includes(key));
+    };
+
     if (!playerInfo) return (
         <div className="flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mlb-blue"></div>
@@ -156,20 +166,58 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     return (
         <div className="max-w-7xl mx-auto px-4 py-6 bg-white">
             {/* Player Header */}
-            <div className="flex items-start gap-6 mb-8">
-                <Avatar className="h-32 w-32 rounded-lg border-2 border-gray-100 shadow-sm">
-                    <AvatarImage src={configurable === true ? playerInfo.imageUrl : 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/1/headshot/67/current'} alt={configurable === true ? playerInfo.fullName : 'Player'} />
-                    <AvatarFallback className="text-3xl bg-mlb-blue text-white">{playerInfo.fullName?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                    <h1 className="text-4xl font-bold text-mlb-blue mb-2">{playerInfo.fullName}</h1>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {sortedInfoKeys.slice(0, 4).map((key) => (
-                            <div key={key} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                <div className="text-sm text-gray-600">{playerInfoMappings[key]?.label || key}</div>
-                                <div className="text-lg font-semibold text-mlb-blue">{String(visiblePlayerInfo[key])}</div>
-                            </div>
-                        ))}
+            <div className="space-y-6 mb-8">
+                <div className="flex gap-6">
+                    <div className="shrink-0">
+                        <Avatar className="h-32 w-32 rounded-lg border-2 border-gray-100 shadow-sm">
+                            <AvatarImage src={configurable === true ? playerInfo.imageUrl : 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/1/headshot/67/current'} alt={configurable === true ? playerInfo.fullName : 'Player'} />
+                            <AvatarFallback className="text-3xl bg-mlb-blue text-white">{playerInfo.fullName?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between mb-4">
+                            <h1 className="text-4xl font-bold text-mlb-blue">{playerInfo.fullName}</h1>
+                            {configurable && (
+                                <SectionToggle
+                                    title=""
+                                    configurable={configurable}
+                                    allKeys={sortedInfoKeys}
+                                    selectedKeys={selectedInfo}
+                                    onToggleAll={(keys) => handleToggleAll('info', keys)}
+                                />
+                            )}
+                        </div>
+                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                            {sortedInfoKeys.map((key) => {
+                                const value = visiblePlayerInfo[key];
+                                const humanReadableKey = playerInfoMappings[key]?.label || key;
+                                if (typeof value === 'object' && value !== null) {
+                                    return null; // Skip nested objects in the grid
+                                }
+                                return (
+                                    <div
+                                        key={key}
+                                        className={`bg-gray-50 p-2 rounded-md border transition-colors ${configurable
+                                            ? 'cursor-pointer border-gray-100 hover:border-gray-200'
+                                            : 'border-gray-100'
+                                            }`}
+                                        onClick={() => configurable && handleToggle(key, 'info')}
+                                    >
+                                        <div className="text-xs text-gray-600">{humanReadableKey}</div>
+                                        <div className={`text-sm font-semibold ${configurable
+                                            ? selectedInfo.includes(key)
+                                                ? 'text-green-600'
+                                                : deselectedInfo.includes(key)
+                                                    ? 'text-red-600'
+                                                    : 'text-mlb-blue'
+                                            : 'text-mlb-blue'
+                                            }`}>
+                                            {String(value)}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -193,14 +241,6 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                             Pitching
                         </TabsTrigger>
                     )}
-                    {hasVisibleInfo && (
-                        <TabsTrigger
-                            value="info"
-                            className="text-lg data-[state=active]:border-b-2 data-[state=active]:border-mlb-blue data-[state=active]:bg-transparent data-[state=active]:text-mlb-blue px-6 rounded-none"
-                        >
-                            Player Info
-                        </TabsTrigger>
-                    )}
                 </TabsList>
 
                 {hasVisibleHitting && (
@@ -222,13 +262,13 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                             </CardHeader>
                             <CardContent className="p-0 w-full">
                                 <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                    <Table className="w-full min-w-[640px]">
+                                    <Table className="w-full table-auto">
                                         <TableHeader>
                                             <TableRow className="bg-gray-50 border-b border-gray-100">
-                                                {sortedHittingKeys.map((key) => (
+                                                {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map((key) => (
                                                     <TableHead
                                                         key={key}
-                                                        className="text-center font-semibold text-gray-700 py-4 px-3 first:pl-6 last:pr-6"
+                                                        className="text-left whitespace-nowrap font-medium text-gray-600 py-2 px-2 first:pl-4 last:pr-4 text-xs"
                                                     >
                                                         <ConfigurableHeader
                                                             statKey={key}
@@ -247,10 +287,10 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                 const visibleStats = filterVisibleStats<HittingStats>(stat as HittingStats, selectedHittingStats);
                                                 return (
                                                     <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                        {sortedHittingKeys.map(key => (
+                                                        {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map(key => (
                                                             <TableCell
                                                                 key={key}
-                                                                className="text-center font-medium text-gray-700 py-4 px-3 first:pl-6 last:pr-6"
+                                                                className="text-left whitespace-nowrap font-medium text-gray-700 py-2 px-2 first:pl-4 last:pr-4 text-sm"
                                                             >
                                                                 {String(visibleStats[key as keyof HittingStats])}
                                                             </TableCell>
@@ -285,13 +325,13 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                             </CardHeader>
                             <CardContent className="p-0 w-full">
                                 <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                    <Table className="w-full min-w-[640px]">
+                                    <Table className="w-full table-auto">
                                         <TableHeader>
                                             <TableRow className="bg-gray-50 border-b border-gray-100">
-                                                {sortedPitchingKeys.map((key) => (
+                                                {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map((key) => (
                                                     <TableHead
                                                         key={key}
-                                                        className="text-center font-semibold text-gray-700 py-4 px-3 first:pl-6 last:pr-6"
+                                                        className="text-left whitespace-nowrap font-medium text-gray-600 py-2 px-2 first:pl-4 last:pr-4 text-xs"
                                                     >
                                                         <ConfigurableHeader
                                                             statKey={key}
@@ -310,10 +350,10 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                 const visibleStats = filterVisibleStats<PitchingStats>(stat as PitchingStats, selectedPitchingStats);
                                                 return (
                                                     <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                        {sortedPitchingKeys.map(key => (
+                                                        {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map(key => (
                                                             <TableCell
                                                                 key={key}
-                                                                className="text-center font-medium text-gray-700 py-4 px-3 first:pl-6 last:pr-6"
+                                                                className="text-left whitespace-nowrap font-medium text-gray-700 py-2 px-2 first:pl-4 last:pr-4 text-sm"
                                                             >
                                                                 {String(visibleStats[key as keyof PitchingStats])}
                                                             </TableCell>
@@ -323,67 +363,6 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                             })}
                                         </TableBody>
                                     </Table>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                )}
-
-                {hasVisibleInfo && (
-                    <TabsContent value="info">
-                        <Card className="border-gray-100 shadow-sm">
-                            <CardHeader className="border-b border-gray-100 bg-gray-50">
-                                <CardTitle className="flex items-center justify-between text-mlb-blue">
-                                    Detailed Information
-                                    {configurable && (
-                                        <SectionToggle
-                                            title=""
-                                            configurable={configurable}
-                                            allKeys={sortedInfoKeys}
-                                            selectedKeys={selectedInfo}
-                                            onToggleAll={(keys) => handleToggleAll('info', keys)}
-                                        />
-                                    )}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {sortedInfoKeys.map((key) => {
-                                        const value = visiblePlayerInfo[key];
-                                        const humanReadableKey = playerInfoMappings[key]?.label || key;
-                                        if (typeof value === 'object' && value !== null) {
-                                            return (
-                                                <div key={key} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                                    <h4 className="font-semibold text-mlb-blue mb-2">{humanReadableKey}</h4>
-                                                    {Object.entries(value).map(([subKey, subValue]) => (
-                                                        <ConfigurableText
-                                                            key={subKey}
-                                                            itemKey={subKey}
-                                                            displayName={subKey}
-                                                            value={String(subValue)}
-                                                            configurable={configurable}
-                                                            selected={selectedInfo}
-                                                            deselected={deselectedInfo}
-                                                            onToggle={(key) => handleToggle(key, 'info')}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            );
-                                        }
-                                        return (
-                                            <div key={key} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                                <ConfigurableText
-                                                    itemKey={key}
-                                                    displayName={humanReadableKey}
-                                                    value={String(value)}
-                                                    configurable={configurable}
-                                                    selected={selectedInfo}
-                                                    deselected={deselectedInfo}
-                                                    onToggle={(key) => handleToggle(key, 'info')}
-                                                />
-                                            </div>
-                                        );
-                                    })}
                                 </div>
                             </CardContent>
                         </Card>

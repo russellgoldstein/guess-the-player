@@ -23,7 +23,8 @@ const GamePage = () => {
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-    const [guessResult, setGuessResult] = useState<'correct' | 'incorrect' | null>(null);
+    const [showGiveUpDialog, setShowGiveUpDialog] = useState(false);
+    const [guessResult, setGuessResult] = useState<'correct' | 'incorrect' | 'gaveup' | null>(null);
     const [currentGuess, setCurrentGuess] = useState<Player | null>(null);
     const [user, setUser] = useState<User | null>(null);
 
@@ -105,6 +106,11 @@ const GamePage = () => {
         }
     };
 
+    const handleGiveUp = () => {
+        setGuessResult('gaveup');
+        setShowGiveUpDialog(false);
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
@@ -155,21 +161,34 @@ const GamePage = () => {
                         )}
                     </div>
 
-                    <div className="max-w-xl">
-                        <PlayerSearch onPlayerSelect={handleGuess} />
+                    <div className="flex items-start gap-4">
+                        <div className="flex-1 max-w-xl">
+                            <PlayerSearch onPlayerSelect={handleGuess} />
+                        </div>
+                        <button
+                            onClick={() => setShowGiveUpDialog(true)}
+                            className="px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors font-medium border border-red-200"
+                            disabled={guessResult !== null}
+                        >
+                            Give Up
+                        </button>
                     </div>
 
                     {guessResult !== null && (
                         <div
                             className={`p-4 sm:p-6 rounded-lg border ${guessResult === 'correct'
-                                ? 'bg-green-50 border-green-200 text-green-800'
-                                : 'bg-red-50 border-red-200 text-red-800'
+                                    ? 'bg-green-50 border-green-200 text-green-800'
+                                    : guessResult === 'gaveup'
+                                        ? 'bg-gray-50 border-gray-200 text-gray-800'
+                                        : 'bg-red-50 border-red-200 text-red-800'
                                 }`}
                         >
                             <p className="text-lg font-semibold">
                                 {guessResult === 'correct'
                                     ? 'Congratulations! You guessed correctly!'
-                                    : 'Sorry, that\'s not the right player. Try again!'}
+                                    : guessResult === 'gaveup'
+                                        ? 'Better luck next time! Here are the player stats.'
+                                        : 'Sorry, that\'s not the right player. Try again!'}
                             </p>
                         </div>
                     )}
@@ -178,19 +197,20 @@ const GamePage = () => {
                         <PlayerStats
                             playerId={game.game_player_config[0].player_id}
                             configurable={false}
-                            selectedInfo={guessResult === 'correct' ? [] : statsConfig.info.selected}
-                            deselectedInfo={guessResult === 'correct' ? [] : statsConfig.info.deselected}
-                            selectedHittingStats={guessResult === 'correct' ? [] : statsConfig.hitting.selected}
-                            deselectedHittingStats={guessResult === 'correct' ? [] : statsConfig.hitting.deselected}
-                            selectedPitchingStats={guessResult === 'correct' ? [] : statsConfig.pitching.selected}
-                            deselectedPitchingStats={guessResult === 'correct' ? [] : statsConfig.pitching.deselected}
+                            selectedInfo={guessResult === 'correct' || guessResult === 'gaveup' ? [] : statsConfig.info.selected}
+                            deselectedInfo={guessResult === 'correct' || guessResult === 'gaveup' ? [] : statsConfig.info.deselected}
+                            selectedHittingStats={guessResult === 'correct' || guessResult === 'gaveup' ? [] : statsConfig.hitting.selected}
+                            deselectedHittingStats={guessResult === 'correct' || guessResult === 'gaveup' ? [] : statsConfig.hitting.deselected}
+                            selectedPitchingStats={guessResult === 'correct' || guessResult === 'gaveup' ? [] : statsConfig.pitching.selected}
+                            deselectedPitchingStats={guessResult === 'correct' || guessResult === 'gaveup' ? [] : statsConfig.pitching.deselected}
                             onStatsChange={() => { }}
-                            showAllStats={guessResult === 'correct'}
+                            showAllStats={guessResult === 'correct' || guessResult === 'gaveup'}
                         />
                     )}
                 </div>
             </div>
 
+            {/* Guess Confirmation Dialog */}
             <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
                 <DialogContent className="sm:max-w-md bg-white rounded-lg shadow-lg border border-gray-200">
                     <DialogHeader className="px-6 pt-6">
@@ -211,6 +231,32 @@ const GamePage = () => {
                             className="px-4 py-2 bg-mlb-blue text-white rounded-md hover:bg-mlb-blue/90 transition-colors font-medium"
                         >
                             Confirm
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Give Up Confirmation Dialog */}
+            <Dialog open={showGiveUpDialog} onOpenChange={setShowGiveUpDialog}>
+                <DialogContent className="sm:max-w-md bg-white rounded-lg shadow-lg border border-gray-200">
+                    <DialogHeader className="px-6 pt-6">
+                        <DialogTitle className="text-xl font-semibold text-gray-900">Confirm Give Up</DialogTitle>
+                        <DialogDescription className="text-gray-600 mt-2">
+                            Are you sure you want to give up? The player's identity and all stats will be revealed.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-4 px-6 py-4 bg-gray-50 rounded-b-lg border-t border-gray-200">
+                        <button
+                            onClick={() => setShowGiveUpDialog(false)}
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors font-medium"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleGiveUp}
+                            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
+                        >
+                            Give Up
                         </button>
                     </div>
                 </DialogContent>

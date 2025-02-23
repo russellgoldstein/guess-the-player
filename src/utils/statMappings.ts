@@ -13,7 +13,7 @@ export const playerInfoMappings: Record<string, StatMapping> = {
     birthCountry: { label: 'Birth Country', order: 7 },
     height: { label: 'Height', order: 8 },
     weight: { label: 'Weight', order: 9 },
-    active: { label: 'Active', order: 10 },
+    active: { label: 'Currently Playing', order: 10 },
     primaryPosition: { label: 'Position', order: 11 },
     batSide: { label: 'Batting Side', order: 12 },
     pitchHand: { label: 'Pitching Hand', order: 13 },

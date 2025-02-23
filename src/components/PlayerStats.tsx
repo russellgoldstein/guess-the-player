@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { playerInfoMappings, hittingStatMappings, pitchingStatMappings, StatMapping } from '../utils/statMappings';
 import { PlayerInfo, HittingStats, PitchingStats } from '../types/player';
 import { ConfigurableHeader } from './ConfigurableHeader';
-import { ConfigurableText } from './ConfigurableText';
 import { SectionToggle } from './SectionToggle';
 import { fetchPlayerData } from '../utils/mlbApi';
 import {

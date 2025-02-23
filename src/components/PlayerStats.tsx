@@ -152,11 +152,13 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     };
 
     const getVisibleKeys = (allKeys: string[], selected: string[], deselected: string[]) => {
+        console.log({ allKeys, selected, deselected })
         // When configurable is true, show all columns
         if (configurable) {
             return allKeys;
         }
         // When not configurable, only show selected columns
+        console.log(allKeys.filter(key => !deselected.includes(key)))
         return allKeys.filter(key => !deselected.includes(key));
     };
 
@@ -256,7 +258,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
             </div>
 
             {/* Stats Tabs */}
-            <Tabs defaultValue="hitting" className="w-full">
+            <Tabs defaultValue={hasVisibleHitting ? "hitting" : hasVisiblePitching ? "pitching" : undefined} className="w-full">
                 <TabsList className="w-full justify-start border-b border-gray-200 bg-transparent mb-6 gap-2">
                     {hasVisibleHitting && (
                         <TabsTrigger

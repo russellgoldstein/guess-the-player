@@ -177,10 +177,10 @@ const GamePage = () => {
                     {guessResult !== null && (
                         <div
                             className={`p-4 sm:p-6 rounded-lg border ${guessResult === 'correct'
-                                    ? 'bg-green-50 border-green-200 text-green-800'
-                                    : guessResult === 'gaveup'
-                                        ? 'bg-gray-50 border-gray-200 text-gray-800'
-                                        : 'bg-red-50 border-red-200 text-red-800'
+                                ? 'bg-green-50 border-green-200 text-green-800'
+                                : guessResult === 'gaveup'
+                                    ? 'bg-gray-50 border-gray-200 text-gray-800'
+                                    : 'bg-red-50 border-red-200 text-red-800'
                                 }`}
                         >
                             <p className="text-lg font-semibold">

@@ -121,7 +121,11 @@ const CreateGamePage = () => {
             )}
             <button
               onClick={saveGameConfiguration}
-              className="bg-mlb-blue hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+              disabled={!selectedPlayer}
+              className={`font-semibold py-2 px-6 rounded-lg transition-colors ${selectedPlayer
+                ? 'bg-mlb-blue hover:bg-blue-700 text-white cursor-pointer'
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
             >
               Generate Shareable Link
             </button>

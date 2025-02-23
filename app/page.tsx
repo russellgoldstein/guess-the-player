@@ -2,19 +2,37 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import PlayerSearch from '../src/components/PlayerSearch';
-import PlayerStatsConfig from '../src/components/PlayerStatsConfig';
+import { PlayerSearch } from '../src/components/PlayerSearch';
 import { supabase } from '../src/lib/supabaseClient';
 import PlayerStats from '@/src/components/PlayerStats';
 
 interface Player {
-  id: string;
-  name: string;
+  id: number;
+  fullName: string;
+}
+
+interface StatsConfig {
+  info: {
+    selected: string[];
+    deselected: string[];
+  };
+  hitting: {
+    selected: string[];
+    deselected: string[];
+  };
+  pitching: {
+    selected: string[];
+    deselected: string[];
+  };
 }
 
 const CreateGamePage = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [hiddenStats, setHiddenStats] = useState<string[]>([]);
+  const [statsConfig, setStatsConfig] = useState<StatsConfig>({
+    info: { selected: [], deselected: [] },
+    hitting: { selected: [], deselected: [] },
+    pitching: { selected: [], deselected: [] }
+  });
   const [link, setLink] = useState('');
   const router = useRouter();
 
@@ -27,7 +45,7 @@ const CreateGamePage = () => {
 
       if (sessionError || !session) {
         console.error('User not logged in:', sessionError);
-        router.push('/login'); // Redirect to login page
+        router.push('/login');
       }
     };
 
@@ -38,14 +56,19 @@ const CreateGamePage = () => {
     setSelectedPlayer(player);
   };
 
-  const handleStatsChange = (stats: string[]) => {
-    setHiddenStats(stats);
+  const handleStatsChange = (type: 'info' | 'hitting' | 'pitching', selected: string[], deselected: string[]) => {
+    setStatsConfig(prev => ({
+      ...prev,
+      [type]: {
+        selected,
+        deselected
+      }
+    }));
   };
 
   const saveGameConfiguration = async () => {
     if (!selectedPlayer) return;
 
-    // Get the current user's session
     const {
       data: { session },
       error: sessionError
@@ -56,25 +79,44 @@ const CreateGamePage = () => {
       return;
     }
 
-    const userId = session.user.id; // Get the user's UUID
+    try {
+      const response = await fetch('/api/games', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: `Game for ${selectedPlayer.fullName}`,
+          creator_id: session.user.id,
+          player_id: selectedPlayer.id,
+          stats_config: {
+            info: {
+              selected: statsConfig.info.selected,
+              deselected: statsConfig.info.deselected
+            },
+            hitting: {
+              selected: statsConfig.hitting.selected,
+              deselected: statsConfig.hitting.deselected
+            },
+            pitching: {
+              selected: statsConfig.pitching.selected,
+              deselected: statsConfig.pitching.deselected
+            }
+          }
+        })
+      });
 
-    const { data, error } = await supabase.from('games').insert([
-      { title: `Game for ${selectedPlayer}`, creator_id: userId },
-    ]).select('id');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save game configuration');
+      }
 
-    if (error || !data || data.length === 0) {
+      const data = await response.json();
+      const generatedLink = `${window.location.origin}/game/${data.game.id}`;
+      setLink(generatedLink);
+    } catch (error) {
       console.error('Error saving game:', error);
-      return;
     }
-
-    const gameId = data[0].id;
-
-    await supabase.from('game_player_config').insert([
-      { game_id: gameId, player_id: selectedPlayer, hidden_stats: hiddenStats },
-    ]);
-
-    const generatedLink = `${window.location.origin}/game/${gameId}`;
-    setLink(generatedLink);
   };
 
   return (
@@ -83,7 +125,17 @@ const CreateGamePage = () => {
       <PlayerSearch onPlayerSelect={handlePlayerSelect} />
       {selectedPlayer && (
         <>
-          <PlayerStats playerId={Number(selectedPlayer)} configurable={true} />
+          <PlayerStats
+            playerId={selectedPlayer.id}
+            configurable={true}
+            selectedInfo={statsConfig.info.selected}
+            deselectedInfo={statsConfig.info.deselected}
+            selectedHittingStats={statsConfig.hitting.selected}
+            deselectedHittingStats={statsConfig.hitting.deselected}
+            selectedPitchingStats={statsConfig.pitching.selected}
+            deselectedPitchingStats={statsConfig.pitching.deselected}
+            onStatsChange={handleStatsChange}
+          />
           <button onClick={saveGameConfiguration}>Generate Link</button>
           {link && <p>Shareable Link: <a href={link}>{link}</a></p>}
         </>

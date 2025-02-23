@@ -1,54 +1,98 @@
-import React, { useState, useEffect } from 'react';
-import { AutoComplete, type Option } from '@/components/ui/autocomplete';
-
-interface Player {
-    id: number;
-    fullName: string;
-}
+import React, { useState } from 'react';
+import { Command } from "cmdk";
+import { MLB_API_BASE_URL } from '../utils/mlbApi';
+import { Player } from '../types/player';
 
 interface PlayerSearchProps {
-    onPlayerSelect: (playerId: number) => void;
+    onPlayerSelect: (player: Player) => void;
 }
 
-const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) => {
+export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) => {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState('');
     const [players, setPlayers] = useState<Player[]>([]);
-    const [inputValue, setInputValue] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchPlayers = async () => {
-            if (inputValue.length < 3) return; // Fetch only if input is 3 or more characters
-            setIsLoading(true);
-            const response = await fetch(`https://statsapi.mlb.com/api/v1/people/search?names=${inputValue}`);
+    const searchPlayers = async (query: string) => {
+        if (query.length < 2) {
+            setPlayers([]);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await fetch(`${MLB_API_BASE_URL}/people/search?names=${encodeURIComponent(query)}`);
             const data = await response.json();
-            setPlayers(data.people);
-            setIsLoading(false);
-        };
+            setPlayers(data.people || []);
+            setOpen(true);
+        } catch (error) {
+            console.error('Error searching players:', error);
+            setPlayers([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchPlayers();
-    }, [inputValue]);
+    const handleSearch = (value: string) => {
+        setSearch(value);
+        if (value.length >= 2) {
+            searchPlayers(value);
+        } else {
+            setOpen(false);
+        }
+    };
 
-    const options: Option[] = players.map(player => ({
-        value: player.id.toString(),
-        label: player.fullName
-    }));
-
-    const handleValueChange = (selectedOption: Option) => {
-        console.log(selectedOption);
-        onPlayerSelect(Number(selectedOption.value));
+    const handleSelect = (playerId: number, playerName: string) => {
+        setOpen(false);
+        setSearch(playerName);
+        onPlayerSelect({ id: playerId, fullName: playerName });
     };
 
     return (
-        <AutoComplete
-            options={options}
-            emptyMessage="No players found."
-            placeholder="Search for a player"
-            isLoading={isLoading}
-            onValueChange={handleValueChange}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-        />
+        <div className="relative">
+            <Command
+                className="border border-gray-200 rounded-lg shadow-sm"
+                loop
+                shouldFilter={false}
+            >
+                <div className="flex items-center border-b p-2">
+                    <input
+                        value={search}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        onFocus={() => search.length >= 2 && setOpen(true)}
+                        className="w-full px-2 py-1 outline-none"
+                        placeholder="Search for a player..."
+                    />
+                </div>
+                {open && (
+                    <>
+                        {loading && (
+                            <div className="p-4 text-center text-gray-500">
+                                Loading...
+                            </div>
+                        )}
+                        {!loading && players.length > 0 && (
+                            <Command.List className="max-h-[300px] overflow-y-auto">
+                                {players.map((player) => (
+                                    <Command.Item
+                                        key={player.id}
+                                        value={player.fullName}
+                                        onSelect={() => handleSelect(player.id, player.fullName)}
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                    >
+                                        {player.fullName}
+                                    </Command.Item>
+                                ))}
+                            </Command.List>
+                        )}
+                        {!loading && search.length >= 2 && players.length === 0 && (
+                            <div className="p-4 text-center text-gray-500">
+                                No players found
+                            </div>
+                        )}
+                    </>
+                )}
+            </Command>
+        </div>
     );
-};
-
-export default PlayerSearch; 
+}; 

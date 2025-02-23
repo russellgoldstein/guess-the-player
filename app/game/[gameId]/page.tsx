@@ -2,20 +2,57 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { supabase } from '../../../src/lib/supabaseClient';
-import PlayerStats from '../../../src/components/PlayerStats';
-import { PlayerSearch } from '../../../src/components/PlayerSearch';
-import { Game } from '../../../src/types/player';
+import { supabase } from '@/src/lib/supabaseClient';
+import PlayerStats from '@/src/components/PlayerStats';
+import { PlayerSearch } from '@/src/components/PlayerSearch';
+import { PageWrapper } from '@/src/components/PageWrapper';
+import { User } from '@supabase/supabase-js';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "../../../src/components/ui/dialog";
-import { Player } from '../../../src/types/player';
-import { PageWrapper } from '@/src/components/PageWrapper';
-import { User } from '@supabase/supabase-js';
+} from "@/src/components/ui/dialog";
+import { Button } from "@/src/components/ui/button";
+
+interface Player {
+    id: number;
+    fullName: string;
+}
+
+interface GamePlayerConfig {
+    id: string;
+    player_id: number;
+    stats_config: {
+        info: {
+            selected: string[];
+            deselected: string[];
+        };
+        hitting: {
+            selected: string[];
+            deselected: string[];
+        };
+        pitching: {
+            selected: string[];
+            deselected: string[];
+        };
+    };
+    game_options: {
+        maxGuesses: number;
+        hint?: {
+            enabled: boolean;
+            text: string;
+        };
+    };
+}
+
+interface Game {
+    id: string;
+    title: string;
+    creator_id: string | null;
+    game_player_config: GamePlayerConfig[];
+}
 
 const GamePage = () => {
     const { gameId } = useParams();
@@ -26,7 +63,9 @@ const GamePage = () => {
     const [showGiveUpDialog, setShowGiveUpDialog] = useState(false);
     const [guessResult, setGuessResult] = useState<'correct' | 'incorrect' | 'gaveup' | null>(null);
     const [currentGuess, setCurrentGuess] = useState<Player | null>(null);
+    const [guesses, setGuesses] = useState<Player[]>([]);
     const [user, setUser] = useState<User | null>(null);
+    const [showHint, setShowHint] = useState(false);
 
     useEffect(() => {
         const checkUserSession = async () => {
@@ -58,7 +97,8 @@ const GamePage = () => {
                         game_player_config (
                             id,
                             player_id,
-                            stats_config
+                            stats_config,
+                            game_options
                         )
                     `)
                     .eq('id', gameId)
@@ -85,13 +125,26 @@ const GamePage = () => {
     };
 
     const handleConfirmGuess = async () => {
-        if (!currentGuess || !game?.game_player_config[0]) return;
+        if (!currentGuess || !game) return;
 
-        const isCorrect = currentGuess.id === Number(game.game_player_config[0].player_id);
-        setGuessResult(isCorrect ? 'correct' : 'incorrect');
+        // Convert both IDs to numbers for comparison
+        const isCorrect = Number(currentGuess.id) === Number(game.game_player_config[0].player_id);
+        const maxGuesses = game.game_player_config[0].game_options?.maxGuesses;
+        const newGuesses = [...guesses, currentGuess];
+
+        setGuesses(newGuesses);
         setShowConfirmDialog(false);
+        setCurrentGuess(null);
 
-        // Save the guess if user is authenticated
+        if (isCorrect) {
+            setGuessResult('correct');
+        } else if (maxGuesses && maxGuesses > 0 && newGuesses.length >= maxGuesses) {
+            setGuessResult('gaveup');
+        } else {
+            setGuessResult('incorrect');
+        }
+
+        // Save guess to database if user is logged in
         if (user) {
             try {
                 await supabase.from('user_guesses').insert([{
@@ -159,6 +212,41 @@ const GamePage = () => {
                                 Playing as guest. Sign in to save your guesses and track your progress.
                             </p>
                         )}
+                        <div className="flex flex-wrap gap-4">
+                            <div className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-gray-600 font-medium">
+                                        {game && game.game_player_config[0].game_options?.maxGuesses > 0 ? (
+                                            <>
+                                                <span className="text-lg font-semibold text-mlb-blue">
+                                                    {game.game_player_config[0].game_options.maxGuesses - guesses.length}
+                                                </span>
+                                                <span className="ml-1">guesses remaining</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-lg font-semibold text-mlb-blue">Unlimited guesses remaining</span>
+                                        )}
+                                    </span>
+                                </div>
+                            </div>
+                            {game?.game_player_config[0].game_options?.hint?.enabled && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowHint(true)}
+                                    disabled={showHint}
+                                    className="text-yellow-600 border-yellow-200 hover:text-yellow-700 hover:bg-yellow-50"
+                                >
+                                    {showHint ? 'Hint Revealed' : 'Show Hint'}
+                                </Button>
+                            )}
+                        </div>
+                        {showHint && game?.game_player_config[0].game_options?.hint?.text && (
+                            <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+                                <p className="text-yellow-800 font-medium">
+                                    Hint: {game.game_player_config[0].game_options.hint.text}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-start gap-4">
@@ -179,7 +267,7 @@ const GamePage = () => {
                             className={`p-4 sm:p-6 rounded-lg border ${guessResult === 'correct'
                                 ? 'bg-green-50 border-green-200 text-green-800'
                                 : guessResult === 'gaveup'
-                                    ? 'bg-gray-50 border-gray-200 text-gray-800'
+                                    ? 'bg-red-50 border-red-200 text-red-800'
                                     : 'bg-red-50 border-red-200 text-red-800'
                                 }`}
                         >
@@ -187,8 +275,8 @@ const GamePage = () => {
                                 {guessResult === 'correct'
                                     ? 'Congratulations! You guessed correctly!'
                                     : guessResult === 'gaveup'
-                                        ? 'Better luck next time! Here are the player stats.'
-                                        : 'Sorry, that\'s not the right player. Try again!'}
+                                        ? 'Game Over! You ran out of guesses.'
+                                        : `Sorry, ${guesses[guesses.length - 1]?.fullName || 'that'} is not the right player. Try again!`}
                             </p>
                         </div>
                     )}

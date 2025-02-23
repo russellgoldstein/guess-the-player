@@ -6,6 +6,7 @@ import { PlayerSearch } from '../src/components/PlayerSearch';
 import { supabase } from '../src/lib/supabaseClient';
 import PlayerStats from '@/src/components/PlayerStats';
 import { PageWrapper } from '@/src/components/PageWrapper';
+import { GameOptions } from '@/src/components/GameOptions';
 
 interface Player {
   id: number;
@@ -37,6 +38,9 @@ const CreateGamePage = () => {
     info: { selected: [], deselected: [] },
     hitting: { selected: [], deselected: [] },
     pitching: { selected: [], deselected: [] }
+  });
+  const [gameOptions, setGameOptions] = useState<GameOptions>({
+    maxGuesses: 3
   });
   const [link, setLink] = useState('');
   const [user, setUser] = useState<User | null>(null);
@@ -91,6 +95,13 @@ const CreateGamePage = () => {
             pitching: {
               selected: statsConfig.pitching.selected,
               deselected: statsConfig.pitching.deselected
+            }
+          },
+          game_options: {
+            maxGuesses: gameOptions.maxGuesses,
+            hint: {
+              enabled: gameOptions.hint?.enabled || false,
+              text: gameOptions.hint?.text || ''
             }
           }
         })
@@ -162,6 +173,12 @@ const CreateGamePage = () => {
         <PlayerSearch onPlayerSelect={handlePlayerSelect} />
         {selectedPlayer && (
           <>
+            <div className="my-8">
+              <GameOptions
+                options={gameOptions}
+                onOptionsChange={setGameOptions}
+              />
+            </div>
             <PlayerStats
               playerId={selectedPlayer.id}
               configurable={true}

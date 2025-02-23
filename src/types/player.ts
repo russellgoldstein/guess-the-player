@@ -32,6 +32,7 @@ export interface PlayerInfo {
     mlbDebutDate: string;
     batSide: string;
     pitchHand: string;
+    imageUrl?: string;
 }
 
 export interface StatEntry<T> {

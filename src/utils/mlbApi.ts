@@ -71,7 +71,7 @@ export const filterPlayerInfo = (playerData: any): Partial<PlayerInfo> => {
     filteredData.primaryPosition = playerData.primaryPosition?.name || '';
     filteredData.batSide = playerData.batSide?.description || '';
     filteredData.pitchHand = playerData.pitchHand?.description || '';
-
+    filteredData.imageUrl = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${playerData.id}/headshot/67/current`;
     // Remove excluded fields
     EXCLUDED_PLAYER_INFO_FIELDS.forEach(field => {
         delete filteredData[field];

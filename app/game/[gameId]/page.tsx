@@ -74,53 +74,68 @@ const GamePage = () => {
     const statsConfig = playerConfig.stats_config;
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-6">Guess the Player</h1>
-
-            <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Make your guess:</h2>
-                <PlayerSearch onPlayerSelect={handleGuess} />
-            </div>
-            {guessResult !== null && (
-                <div className={`p-4 mb-8 rounded-lg ${guessResult === 'correct' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    <p className="text-lg font-semibold">
-                        {guessResult === 'correct'
-                            ? 'Congratulations! You guessed correctly!'
-                            : 'Sorry, that\'s not the right player. Try again!'}
-                    </p>
+        <div className="min-h-screen bg-white">
+            <div className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+                <div className="space-y-2">
+                    <h1 className="text-3xl sm:text-4xl font-bold text-mlb-blue">Guess the Player</h1>
+                    <p className="text-gray-600">Try to guess the player based on their stats.</p>
                 </div>
-            )}
 
-            <PlayerStats
-                playerId={playerConfig.player_id}
-                configurable={false}
-                selectedInfo={statsConfig.info.selected}
-                deselectedInfo={statsConfig.info.deselected}
-                selectedHittingStats={statsConfig.hitting.selected}
-                deselectedHittingStats={statsConfig.hitting.deselected}
-                selectedPitchingStats={statsConfig.pitching.selected}
-                deselectedPitchingStats={statsConfig.pitching.deselected}
-                onStatsChange={() => { }} // Empty function since configurable is false
-            />
+                <div className="space-y-4">
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Make your guess:</h2>
+                    <div className="max-w-xl">
+                        <PlayerSearch onPlayerSelect={handleGuess} />
+                    </div>
+                </div>
+
+                {guessResult !== null && (
+                    <div
+                        className={`p-4 sm:p-6 rounded-lg border ${guessResult === 'correct'
+                            ? 'bg-green-50 border-green-200 text-green-800'
+                            : 'bg-red-50 border-red-200 text-red-800'
+                            }`}
+                    >
+                        <p className="text-lg font-semibold">
+                            {guessResult === 'correct'
+                                ? 'Congratulations! You guessed correctly!'
+                                : 'Sorry, that\'s not the right player. Try again!'}
+                        </p>
+                    </div>
+                )}
+
+                <div className="-mx-3 sm:-mx-6">
+                    <PlayerStats
+                        playerId={playerConfig.player_id}
+                        configurable={false}
+                        selectedInfo={statsConfig.info.selected}
+                        deselectedInfo={statsConfig.info.deselected}
+                        selectedHittingStats={statsConfig.hitting.selected}
+                        deselectedHittingStats={statsConfig.hitting.deselected}
+                        selectedPitchingStats={statsConfig.pitching.selected}
+                        deselectedPitchingStats={statsConfig.pitching.deselected}
+                        onStatsChange={() => { }}
+                    />
+                </div>
+            </div>
 
             <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Confirm your guess</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle className="text-xl font-semibold">Confirm your guess</DialogTitle>
+                        <DialogDescription className="text-gray-600">
                             Are you sure you want to guess {currentGuess?.fullName}?
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex justify-end gap-4 mt-4">
+                    <div className="flex justify-end gap-4 mt-6">
                         <button
                             onClick={() => setShowConfirmDialog(false)}
-                            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleConfirmGuess}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            className="px-4 py-2 bg-mlb-blue text-white rounded-lg hover:bg-mlb-blue/90 font-medium"
                         >
                             Confirm
                         </button>

@@ -1,3 +1,5 @@
+import React from 'react';
+
 interface ConfigurableHeaderProps {
     statKey: string;
     displayName: string;
@@ -13,26 +15,25 @@ export const ConfigurableHeader: React.FC<ConfigurableHeaderProps> = ({
     configurable,
     selected,
     deselected,
-    onToggle
+    onToggle,
 }) => {
-    const getHeaderClassName = () => {
-        if (!configurable) return '';
-
-        if (selected.includes(statKey)) {
-            return 'text-green-500 cursor-pointer';
+    const handleClick = () => {
+        if (configurable) {
+            onToggle(statKey);
         }
-        if (deselected.includes(statKey)) {
-            return 'text-red-500 cursor-pointer';
-        }
-        return '';
     };
 
+    const isSelected = selected.includes(statKey);
+    const isDeselected = deselected.includes(statKey);
+    const isConfigurable = configurable && (isSelected || !isDeselected);
+
     return (
-        <th
-            className={getHeaderClassName()}
-            onClick={() => configurable && onToggle(statKey)}
+        <div
+            className={`cursor-${configurable ? 'pointer' : 'default'} ${isConfigurable ? '' : 'opacity-50'
+                }`}
+            onClick={handleClick}
         >
             {displayName}
-        </th>
+        </div>
     );
 }; 

@@ -12,8 +12,10 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "../../../src/components/ui/dialog";
 import { Player } from '../../../src/types/player';
+import { PageWrapper } from '@/src/components/PageWrapper';
+
 const GamePage = () => {
     const { gameId } = useParams();
     const [game, setGame] = useState<Game | null>(null);
@@ -113,44 +115,46 @@ const GamePage = () => {
     const statsConfig = playerConfig.stats_config;
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
-                <div className="space-y-2">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-mlb-blue">Guess the Player</h1>
-                    <p className="text-gray-600">Try to guess the player based on their stats.</p>
-                </div>
-
-                <div className="max-w-xl">
-                    <PlayerSearch onPlayerSelect={handleGuess} />
-                </div>
-
-                {guessResult !== null && (
-                    <div
-                        className={`p-4 sm:p-6 rounded-lg border ${guessResult === 'correct'
-                            ? 'bg-green-50 border-green-200 text-green-800'
-                            : 'bg-red-50 border-red-200 text-red-800'
-                            }`}
-                    >
-                        <p className="text-lg font-semibold">
-                            {guessResult === 'correct'
-                                ? 'Congratulations! You guessed correctly!'
-                                : 'Sorry, that\'s not the right player. Try again!'}
-                        </p>
+        <PageWrapper>
+            <div className="min-h-screen bg-white">
+                <div className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl sm:text-4xl font-bold text-mlb-blue">Guess the Player</h1>
+                        <p className="text-gray-600">Try to guess the player based on their stats.</p>
                     </div>
-                )}
 
-                <div className="-mx-3 sm:-mx-6">
-                    <PlayerStats
-                        playerId={playerConfig.player_id}
-                        configurable={false}
-                        selectedInfo={statsConfig.info.selected}
-                        deselectedInfo={statsConfig.info.deselected}
-                        selectedHittingStats={statsConfig.hitting.selected}
-                        deselectedHittingStats={statsConfig.hitting.deselected}
-                        selectedPitchingStats={statsConfig.pitching.selected}
-                        deselectedPitchingStats={statsConfig.pitching.deselected}
-                        onStatsChange={() => { }}
-                    />
+                    <div className="max-w-xl">
+                        <PlayerSearch onPlayerSelect={handleGuess} />
+                    </div>
+
+                    {guessResult !== null && (
+                        <div
+                            className={`p-4 sm:p-6 rounded-lg border ${guessResult === 'correct'
+                                ? 'bg-green-50 border-green-200 text-green-800'
+                                : 'bg-red-50 border-red-200 text-red-800'
+                                }`}
+                        >
+                            <p className="text-lg font-semibold">
+                                {guessResult === 'correct'
+                                    ? 'Congratulations! You guessed correctly!'
+                                    : 'Sorry, that\'s not the right player. Try again!'}
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="-mx-3 sm:-mx-6">
+                        <PlayerStats
+                            playerId={playerConfig.player_id}
+                            configurable={false}
+                            selectedInfo={statsConfig.info.selected}
+                            deselectedInfo={statsConfig.info.deselected}
+                            selectedHittingStats={statsConfig.hitting.selected}
+                            deselectedHittingStats={statsConfig.hitting.deselected}
+                            selectedPitchingStats={statsConfig.pitching.selected}
+                            deselectedPitchingStats={statsConfig.pitching.deselected}
+                            onStatsChange={() => { }}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -178,7 +182,7 @@ const GamePage = () => {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </PageWrapper>
     );
 };
 

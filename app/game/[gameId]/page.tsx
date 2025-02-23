@@ -174,19 +174,20 @@ const GamePage = () => {
                         </div>
                     )}
 
-                    <div className="-mx-3 sm:-mx-6">
+                    {game && (
                         <PlayerStats
-                            playerId={playerConfig.player_id}
+                            playerId={game.game_player_config[0].player_id}
                             configurable={false}
-                            selectedInfo={statsConfig.info.selected}
-                            deselectedInfo={statsConfig.info.deselected}
-                            selectedHittingStats={statsConfig.hitting.selected}
-                            deselectedHittingStats={statsConfig.hitting.deselected}
-                            selectedPitchingStats={statsConfig.pitching.selected}
-                            deselectedPitchingStats={statsConfig.pitching.deselected}
+                            selectedInfo={guessResult === 'correct' ? [] : statsConfig.info.selected}
+                            deselectedInfo={guessResult === 'correct' ? [] : statsConfig.info.deselected}
+                            selectedHittingStats={guessResult === 'correct' ? [] : statsConfig.hitting.selected}
+                            deselectedHittingStats={guessResult === 'correct' ? [] : statsConfig.hitting.deselected}
+                            selectedPitchingStats={guessResult === 'correct' ? [] : statsConfig.pitching.selected}
+                            deselectedPitchingStats={guessResult === 'correct' ? [] : statsConfig.pitching.deselected}
                             onStatsChange={() => { }}
+                            showAllStats={guessResult === 'correct'}
                         />
-                    </div>
+                    )}
                 </div>
             </div>
 

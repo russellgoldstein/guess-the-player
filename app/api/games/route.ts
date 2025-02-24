@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 export async function POST(request: Request) {
     const supabase = createRouteHandlerClient({ cookies });
 
-    const { title, creator_id, player_id, stats_config } = await request.json();
+    const { title, creator_id, player_id, stats_config, game_options } = await request.json();
 
     // Start a transaction by using single batch
     const { data: gameData, error: gameError } = await supabase
@@ -27,7 +27,8 @@ export async function POST(request: Request) {
         .insert([{
             game_id: gameData.id,
             player_id,
-            stats_config
+            stats_config,
+            game_options
         }])
         .select();
 

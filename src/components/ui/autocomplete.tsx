@@ -38,9 +38,26 @@ export const AutoComplete = ({
     setInputValue,
 }: AutoCompleteProps) => {
     const inputRef = useRef<HTMLInputElement>(null)
+    const commandRef = useRef<HTMLDivElement>(null)
 
     const [isOpen, setOpen] = useState(false)
     const [selected, setSelected] = useState<Option>(value as Option)
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                commandRef.current &&
+                !commandRef.current.contains(event.target as Node)
+            ) {
+                setOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [])
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -107,7 +124,7 @@ export const AutoComplete = ({
     )
 
     return (
-        <CommandPrimitive onKeyDown={handleKeyDown}>
+        <CommandPrimitive onKeyDown={handleKeyDown} ref={commandRef}>
             <div>
                 <CommandInput
                     ref={inputRef}

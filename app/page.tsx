@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { PlayerSearch } from '../src/components/PlayerSearch';
 import { supabase } from '../src/lib/supabaseClient';
 import PlayerStats from '@/src/components/PlayerStats';
 import { PageWrapper } from '@/src/components/PageWrapper';
 import { GameOptions } from '@/src/components/GameOptions';
+import { Button } from '@/src/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/src/components/ui/dialog';
+import { Settings } from 'lucide-react';
 
 interface Player {
   id: number;
@@ -40,10 +42,37 @@ const CreateGamePage = () => {
     pitching: { selected: [], deselected: [] }
   });
   const [gameOptions, setGameOptions] = useState<GameOptions>({
-    maxGuesses: 3
+    maxGuesses: 3,
+    hint: {
+      enabled: false,
+      text: ''
+    },
+    progressiveReveal: {
+      enabled: true,
+      statsPerReveal: 1,
+      protectedStats: [
+        'fullName',
+        'imageUrl',
+        'currentTeam',
+        'firstName',
+        'lastName',
+        'middleName',
+        'useFirstName',
+        'useLastName',
+        'useMiddleName',
+        'nickName'
+      ],
+      orderedStats: {
+        info: [],
+        hitting: [],
+        pitching: []
+      },
+      useOrderedReveal: false
+    }
   });
   const [link, setLink] = useState('');
   const [user, setUser] = useState<User | null>(null);
+  const [showOptions, setShowOptions] = useState(false);
 
   useEffect(() => {
     const checkUserSession = async () => {
@@ -102,7 +131,8 @@ const CreateGamePage = () => {
             hint: {
               enabled: gameOptions.hint?.enabled || false,
               text: gameOptions.hint?.text || ''
-            }
+            },
+            progressiveReveal: gameOptions.progressiveReveal
           }
         })
       });
@@ -125,6 +155,17 @@ const CreateGamePage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 space-y-4">
           <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
+            <div className="w-full flex justify-end mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowOptions(true)}
+                className="flex items-center gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Game Options
+              </Button>
+            </div>
             {!user && (
               <div className="mb-4 p-4 bg-blue-50 text-blue-700 rounded-md">
                 <p>You are creating a game as a guest. Sign in to save your games and track your history.</p>
@@ -172,26 +213,35 @@ const CreateGamePage = () => {
         <h1>Search for a Player to Create a Game</h1>
         <PlayerSearch onPlayerSelect={handlePlayerSelect} />
         {selectedPlayer && (
-          <>
-            <div className="my-8">
-              <GameOptions
-                options={gameOptions}
-                onOptionsChange={setGameOptions}
-              />
-            </div>
-            <PlayerStats
-              playerId={selectedPlayer.id}
-              configurable={true}
-              selectedInfo={statsConfig.info.selected}
-              deselectedInfo={statsConfig.info.deselected}
-              selectedHittingStats={statsConfig.hitting.selected}
-              deselectedHittingStats={statsConfig.hitting.deselected}
-              selectedPitchingStats={statsConfig.pitching.selected}
-              deselectedPitchingStats={statsConfig.pitching.deselected}
-              onStatsChange={handleStatsChange}
-            />
-          </>
+          <PlayerStats
+            playerId={selectedPlayer.id}
+            configurable={true}
+            selectedInfo={statsConfig.info.selected}
+            deselectedInfo={statsConfig.info.deselected}
+            selectedHittingStats={statsConfig.hitting.selected}
+            deselectedHittingStats={statsConfig.hitting.deselected}
+            selectedPitchingStats={statsConfig.pitching.selected}
+            deselectedPitchingStats={statsConfig.pitching.deselected}
+            onStatsChange={handleStatsChange}
+          />
         )}
+
+        <Dialog open={showOptions} onOpenChange={setShowOptions}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white">
+            <DialogHeader>
+              <DialogTitle>Game Options</DialogTitle>
+            </DialogHeader>
+            <GameOptions
+              options={gameOptions}
+              onOptionsChange={setGameOptions}
+              deselectedStats={{
+                info: statsConfig.info.deselected,
+                hitting: statsConfig.hitting.deselected,
+                pitching: statsConfig.pitching.deselected
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </PageWrapper>
   );

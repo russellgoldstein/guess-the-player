@@ -4,17 +4,6 @@ import { Database } from '../types/supabase';
 // Create a single instance of the Supabase client to be used throughout the app
 export const supabase = createClientComponentClient<Database>();
 
-// Add a listener for auth state changes to help with debugging
-supabase.auth.onAuthStateChange((event, session) => {
-    console.log('Supabase auth event:', event);
-    console.log('Session exists:', !!session);
-
-    if (session) {
-        console.log('User ID:', session.user.id);
-        console.log('Session expires at:', new Date(session.expires_at! * 1000).toISOString());
-    }
-});
-
 // Export a function to get the current session
 export const getCurrentSession = async () => {
     try {
@@ -41,7 +30,6 @@ export const refreshSessionIfNeeded = async () => {
         }
 
         if (!data.session) {
-            console.log('No session to refresh');
             return null;
         }
 
@@ -51,7 +39,6 @@ export const refreshSessionIfNeeded = async () => {
         const tenMinutesInMs = 10 * 60 * 1000;
 
         if (expiresAt - now < tenMinutesInMs) {
-            console.log('Session is about to expire, refreshing...');
             const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
             if (refreshError) {
@@ -59,7 +46,6 @@ export const refreshSessionIfNeeded = async () => {
                 return null;
             }
 
-            console.log('Session refreshed successfully');
             return refreshData.session;
         }
 

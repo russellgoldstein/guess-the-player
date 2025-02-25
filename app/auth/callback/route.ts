@@ -13,9 +13,7 @@ export async function GET(request: NextRequest) {
         const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
         try {
-            console.log('Auth callback: Exchanging code for session');
             await supabase.auth.exchangeCodeForSession(code);
-            console.log('Auth callback: Session created successfully');
         } catch (error) {
             console.error('Auth callback: Error exchanging code for session:', error);
             return NextResponse.redirect(

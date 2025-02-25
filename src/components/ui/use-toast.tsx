@@ -27,7 +27,6 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
 
     const toast = ({ title, description, variant = 'default', duration = 3000 }: Omit<Toast, 'id'>) => {
         const id = Math.random().toString(36).substring(2, 9);
-        console.log('Creating toast:', { id, title, description });
 
         // Check if a similar toast already exists (same title and description)
         const hasSimilarToast = toasts.some(
@@ -35,7 +34,6 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
         );
 
         if (hasSimilarToast) {
-            console.log('Similar toast already exists, not adding another');
             return;
         }
 
@@ -49,14 +47,8 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const dismiss = (id: string) => {
-        console.log('Dismissing toast:', id);
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
     };
-
-    // For debugging
-    useEffect(() => {
-        console.log('Current toasts:', toasts);
-    }, [toasts]);
 
     return (
         <ToastContext.Provider value={{ toasts, toast, dismiss }}>

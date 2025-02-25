@@ -17,6 +17,7 @@ import {
     NavigationMenuLink,
     NavigationMenuList,
 } from "@radix-ui/react-navigation-menu";
+import { PlusCircle, Shuffle } from "lucide-react";
 
 interface PageWrapperProps {
     children: React.ReactNode;
@@ -54,11 +55,20 @@ export const PageWrapper = ({ children }: PageWrapperProps) => {
                             Guess the Player
                         </Link>
                         <NavigationMenu className="hidden md:flex">
-                            <NavigationMenuList>
+                            <NavigationMenuList className="flex space-x-2">
                                 <NavigationMenuItem>
                                     <Link href="/create-game" legacyBehavior passHref>
-                                        <NavigationMenuLink className="px-4 py-2 text-sm text-gray-700 hover:text-mlb-blue">
+                                        <NavigationMenuLink className="px-4 py-2 text-sm text-white bg-mlb-blue hover:bg-mlb-blue/90 rounded-md flex items-center">
+                                            <PlusCircle className="h-4 w-4 mr-2" />
                                             Create Game
+                                        </NavigationMenuLink>
+                                    </Link>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem>
+                                    <Link href="/game/random" legacyBehavior passHref>
+                                        <NavigationMenuLink className="px-4 py-2 text-sm text-white bg-green-600 hover:bg-green-700 rounded-md flex items-center">
+                                            <Shuffle className="h-4 w-4 mr-2" />
+                                            Play Random Game
                                         </NavigationMenuLink>
                                     </Link>
                                 </NavigationMenuItem>

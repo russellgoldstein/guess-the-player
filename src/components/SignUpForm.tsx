@@ -20,7 +20,7 @@ const SignupForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate passwords match
     if (password !== confirmPassword) {
       toast({
@@ -30,7 +30,7 @@ const SignupForm = () => {
       });
       return;
     }
-    
+
     // Validate password strength
     if (password.length < 8) {
       toast({
@@ -40,11 +40,10 @@ const SignupForm = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
-      console.log('Attempting to sign up with email:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -63,7 +62,6 @@ const SignupForm = () => {
         return;
       }
 
-      console.log('Signup successful, user:', data.user?.id);
       toast({
         title: 'Signup successful',
         description: 'Please check your email to confirm your account',
@@ -136,8 +134,8 @@ const SignupForm = () => {
               disabled={isLoading}
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-mlb-blue hover:bg-blue-700"
             disabled={isLoading}
           >
@@ -156,9 +154,9 @@ const SignupForm = () => {
         <div className="text-sm text-center text-gray-500">
           Already have an account?
         </div>
-        <Button 
-          variant="outline" 
-          className="w-full" 
+        <Button
+          variant="outline"
+          className="w-full"
           onClick={handleLogin}
           disabled={isLoading}
         >

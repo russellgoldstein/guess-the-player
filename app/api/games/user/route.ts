@@ -5,13 +5,24 @@ import { cookies } from 'next/headers';
 export const dynamic = 'force-dynamic';
 
 // GET handler for fetching user games
-export async function GET() {
-    console.log('GET /api/games/user - Starting request');
+export async function GET(request: Request) {
 
     try {
+        // Parse URL to get pagination parameters
+        const url = new URL(request.url);
+        const page = parseInt(url.searchParams.get('page') || '1', 10);
+        const pageSize = parseInt(url.searchParams.get('page_size') || '10', 10);
+        const searchQuery = url.searchParams.get('search') || '';
+
+        // Validate pagination parameters
+        const validatedPage = Math.max(1, page);
+        const validatedPageSize = Math.min(50, Math.max(1, pageSize)); // Limit page size between 1 and 50
+
+        // Calculate offset
+        const offset = (validatedPage - 1) * validatedPageSize;
+
         // Create Supabase client with server-side cookies using the auth-helpers
-        const cookieStore = cookies();
-        const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+        const supabase = createRouteHandlerClient({ cookies });
 
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -25,21 +36,30 @@ export async function GET() {
         }
 
         if (!session) {
-            console.log('No session found in API route');
             return NextResponse.json(
                 { error: 'Authentication required', message: 'Please log in to view your games' },
                 { status: 401 }
             );
         }
 
-        console.log('User authenticated:', session.user.id);
-
-        // Fetch games created by the user - using creator_id instead of user_id
-        const { data: games, error: gamesError } = await supabase
+        // Build the query
+        let query = supabase
             .from('games')
-            .select('*, game_player_config(*)')
-            .eq('creator_id', session.user.id)
-            .order('created_at', { ascending: false });
+            .select('*, game_player_config(*)', { count: 'exact' })
+            .eq('creator_id', session.user.id);
+
+        // Add search filter if provided
+        if (searchQuery) {
+            query = query.ilike('title', `%${searchQuery}%`);
+        }
+
+        // Add pagination
+        query = query
+            .order('created_at', { ascending: false })
+            .range(offset, offset + validatedPageSize - 1);
+
+        // Execute the query
+        const { data: games, error: gamesError, count } = await query;
 
         if (gamesError) {
             console.error('Error fetching games:', gamesError.message);
@@ -49,8 +69,16 @@ export async function GET() {
             );
         }
 
-        console.log(`Found ${games?.length || 0} games for user ${session.user.id}`);
-        return NextResponse.json(games || []);
+        // Return paginated results with metadata
+        return NextResponse.json({
+            games: games || [],
+            pagination: {
+                page: validatedPage,
+                pageSize: validatedPageSize,
+                totalCount: count || 0,
+                totalPages: count ? Math.ceil(count / validatedPageSize) : 0
+            }
+        });
     } catch (error) {
         console.error('Unexpected error in GET /api/games/user:', error);
         return NextResponse.json(
@@ -62,7 +90,6 @@ export async function GET() {
 
 // DELETE handler for deleting a user game
 export async function DELETE(request: Request) {
-    console.log('DELETE /api/games/user - Starting request');
 
     try {
         // Get the game ID from the URL
@@ -76,11 +103,8 @@ export async function DELETE(request: Request) {
             );
         }
 
-        console.log('Deleting game with ID:', gameId);
-
         // Create Supabase client with server-side cookies using the auth-helpers
-        const cookieStore = cookies();
-        const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+        const supabase = createRouteHandlerClient({ cookies });
 
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -94,14 +118,11 @@ export async function DELETE(request: Request) {
         }
 
         if (!session) {
-            console.log('No session found in API route');
             return NextResponse.json(
                 { error: 'Authentication required', message: 'Please log in to delete your games' },
                 { status: 401 }
             );
         }
-
-        console.log('User authenticated:', session.user.id);
 
         // First check if the game belongs to the user - using creator_id instead of user_id
         const { data: game, error: gameError } = await supabase
@@ -146,7 +167,6 @@ export async function DELETE(request: Request) {
             );
         }
 
-        console.log('Game deleted successfully');
         return NextResponse.json({ success: true, message: 'Game deleted successfully' });
     } catch (error) {
         console.error('Unexpected error in DELETE /api/games/user:', error);

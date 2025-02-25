@@ -6,11 +6,38 @@ import { supabase, getCurrentSession, refreshSessionIfNeeded } from '@/src/lib/s
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { Clipboard, Trash2, ExternalLink, AlertCircle, Copy } from "lucide-react";
+import { Clipboard, Trash2, ExternalLink, AlertCircle, Copy, PlusCircle, Loader2, Search, RefreshCw } from "lucide-react";
 import { useToast } from "./ui/use-toast";
 import { Skeleton } from "./ui/skeleton";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "./ui/table";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "./ui/tooltip";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "./ui/alert-dialog";
+import { Input } from "./ui/input";
+import { formatDistanceToNow } from "date-fns";
 
 interface Game {
     id: string;
@@ -24,7 +51,18 @@ interface Game {
         stats_config: any;
         game_options: any;
     }[];
-    user_id: string;
+}
+
+interface PaginationMetadata {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+}
+
+interface PaginatedGamesResponse {
+    games: Game[];
+    pagination: PaginationMetadata;
 }
 
 interface UserGamesListProps {
@@ -32,17 +70,32 @@ interface UserGamesListProps {
 }
 
 export const UserGamesList = ({ user }: UserGamesListProps) => {
+    const [activeTab, setActiveTab] = useState<string>("created");
     const [games, setGames] = useState<Game[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('created');
-    const router = useRouter();
-    const { toast } = useToast();
-
-    // Use refs to prevent infinite loops and duplicate toasts
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const hasShownAuthErrorToast = useRef(false);
     const fetchAttempts = useRef(0);
     const maxFetchAttempts = 3;
     const isAuthenticated = useRef(false);
+    const { toast } = useToast();
+    const router = useRouter();
+    const [isCreating, setIsCreating] = useState(false);
+    const [gameToDelete, setGameToDelete] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isCopying, setIsCopying] = useState(false);
+    const [copiedGameId, setCopiedGameId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [playingGameId, setPlayingGameId] = useState<string | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
 
     useEffect(() => {
         const checkAuthAndFetchGames = async () => {
@@ -55,13 +108,11 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                 const session = await getCurrentSession();
 
                 if (session) {
-                    console.log('User is authenticated, fetching games');
                     isAuthenticated.current = true;
                     fetchUserGames();
                 } else {
-                    console.log('User is not authenticated');
                     isAuthenticated.current = false;
-                    setLoading(false);
+                    setIsLoading(false);
 
                     if (!hasShownAuthErrorToast.current) {
                         toast({
@@ -74,7 +125,7 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                 }
             } catch (error) {
                 console.error('Error checking authentication:', error);
-                setLoading(false);
+                setIsLoading(false);
             }
         };
 
@@ -82,15 +133,11 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
 
         // Set up auth state change listener
         const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log('Auth state changed in UserGamesList:', event);
-
             if (event === 'SIGNED_IN') {
-                console.log('User signed in, fetching games');
                 isAuthenticated.current = true;
                 hasShownAuthErrorToast.current = false; // Reset toast flag on sign in
                 fetchUserGames();
             } else if (event === 'SIGNED_OUT') {
-                console.log('User signed out');
                 isAuthenticated.current = false;
                 setGames([]);
             }
@@ -101,24 +148,39 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
         };
     }, []);
 
+    // Fetch games when pagination parameters change
+    useEffect(() => {
+        if (isAuthenticated.current) {
+            fetchUserGames();
+        }
+    }, [currentPage, pageSize]);
+
+    // Debounced search effect
+    useEffect(() => {
+        if (!isAuthenticated.current) return;
+
+        const handler = setTimeout(() => {
+            fetchUserGames();
+        }, 300);
+
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
+
     const fetchUserGames = async () => {
         // Prevent too many fetch attempts
         if (fetchAttempts.current >= maxFetchAttempts) {
-            console.log(`Reached maximum fetch attempts (${maxFetchAttempts}), stopping`);
-            setLoading(false);
+            setIsLoading(false);
             return;
         }
 
         fetchAttempts.current += 1;
-        console.log(`Fetching user games (attempt ${fetchAttempts.current})`);
-        setLoading(true);
+        setIsLoading(true);
 
         try {
             // Try to refresh the session if needed
             const session = await refreshSessionIfNeeded();
 
             if (!session) {
-                console.log('No valid session found, cannot fetch games');
                 if (!hasShownAuthErrorToast.current) {
                     toast({
                         title: 'Authentication required',
@@ -127,17 +189,25 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                     });
                     hasShownAuthErrorToast.current = true;
                 }
-                setLoading(false);
+                setIsLoading(false);
                 return;
             }
 
+            // Build URL with pagination and search parameters
+            const url = new URL('/api/games/user', window.location.origin);
+            url.searchParams.append('page', currentPage.toString());
+            url.searchParams.append('page_size', pageSize.toString());
+
+            if (searchQuery) {
+                url.searchParams.append('search', searchQuery);
+            }
+
             // Make the API request
-            const response = await fetch('/api/games/user', {
+            const response = await fetch(url.toString(), {
                 headers: {
                     'Cache-Control': 'no-cache',
                 },
             });
-            console.log('API response status:', response.status);
 
             if (!response.ok) {
                 if (response.status === 401) {
@@ -153,21 +223,23 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                         hasShownAuthErrorToast.current = true;
                     }
 
-                    setLoading(false);
+                    setIsLoading(false);
                     return;
                 }
 
                 throw new Error(`Failed to fetch user games: ${response.status} ${response.statusText}`);
             }
 
-            const data = await response.json();
-            console.log('Fetched games:', data);
+            const data = await response.json() as PaginatedGamesResponse;
 
             // Reset fetch attempts on successful fetch
             fetchAttempts.current = 0;
 
-            setGames(data);
-            setLoading(false);
+            setGames(data.games);
+            setIsLoading(false);
+            setLastRefreshed(new Date());
+            setTotalItems(data.pagination.totalCount);
+            setTotalPages(data.pagination.totalPages);
         } catch (error) {
             console.error('Error fetching user games:', error);
 
@@ -181,61 +253,122 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                 hasShownAuthErrorToast.current = true;
             }
 
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
-    const handleDeleteGame = async (gameId: string) => {
+    const handleDeleteGame = async (gameId: string, event?: React.MouseEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        setIsDeleting(true);
         try {
-            console.log('Deleting game:', gameId);
+            const { error } = await supabase
+                .from('games')
+                .delete()
+                .eq('id', gameId);
 
-            const response = await fetch(`/api/games/user?gameId=${gameId}`, {
-                method: 'DELETE',
-            });
-
-            console.log('Delete response status:', response.status);
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Error response from delete API:', errorData);
-                throw new Error(errorData.message || 'Failed to delete game');
+            if (error) {
+                console.error('Error deleting game:', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to delete game. Please try again.",
+                    variant: "destructive",
+                });
+                return;
             }
 
-            console.log('Game deleted successfully');
-            toast({
-                title: 'Game deleted',
-                description: 'Your game has been deleted successfully.',
-            });
-
-            // Refresh the games list
+            // Remove the game from the state
             setGames(games.filter(game => game.id !== gameId));
+            toast({
+                title: "Success",
+                description: "Game deleted successfully",
+            });
         } catch (error) {
             console.error('Error deleting game:', error);
             toast({
-                title: 'Error',
-                description: 'Failed to delete game. Please try again.',
-                variant: 'destructive',
+                title: "Error",
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive",
             });
+        } finally {
+            setIsDeleting(false);
+            setGameToDelete(null);
         }
     };
 
-    const handleCopyLink = (gameId: string) => {
+    const confirmDelete = (gameId: string, event?: React.MouseEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        setGameToDelete(gameId);
+    };
+
+    const handleCopyGameLink = async (gameId: string, event?: React.MouseEvent) => {
+        // Prevent default behavior to avoid page refresh
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        // Don't proceed if already copying
+        if (isCopying) return;
+
+        setIsCopying(true);
+        setCopiedGameId(gameId);
+
         try {
             const gameUrl = `${window.location.origin}/game/${gameId}`;
-            navigator.clipboard.writeText(gameUrl);
-            console.log('Copied game link:', gameUrl);
 
-            toast({
-                title: 'Link copied',
-                description: 'Game link copied to clipboard',
-            });
+            // Use the modern clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(gameUrl);
+
+                toast({
+                    title: "Link Copied",
+                    description: "Game link copied to clipboard",
+                });
+            } else {
+                // Fallback for browsers that don't support the Clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = gameUrl;
+
+                // Make the textarea out of viewport
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+
+                textArea.focus();
+                textArea.select();
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    toast({
+                        title: "Link Copied",
+                        description: "Game link copied to clipboard",
+                    });
+                } else {
+                    throw new Error('Failed to copy text');
+                }
+            }
         } catch (error) {
-            console.error('Error copying link:', error);
+            console.error('Error copying game link:', error);
             toast({
-                title: 'Error',
-                description: 'Failed to copy link. Please try again.',
-                variant: 'destructive',
+                title: "Error",
+                description: "Failed to copy link. Please try again.",
+                variant: "destructive",
             });
+        } finally {
+            // Use a timeout to show the copying state briefly
+            setTimeout(() => {
+                setIsCopying(false);
+                setCopiedGameId(null);
+            }, 1000);
         }
     };
 
@@ -244,6 +377,33 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
         hasShownAuthErrorToast.current = false;
         router.push('/login');
     };
+
+    const handleCreateGame = () => {
+        setIsCreating(true);
+        router.push('/create');
+    };
+
+    const handlePlayGame = (gameId: string, event?: React.MouseEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        setIsPlaying(true);
+        setPlayingGameId(gameId);
+        router.push(`/game/${gameId}`);
+    };
+
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        fetchUserGames();
+        setTimeout(() => {
+            setIsRefreshing(false);
+        }, 1000);
+    };
+
+    // Filter games based on search query
+    // We're now using backend filtering, so we don't need to filter the games client-side
+    const filteredGames = games;
 
     if (!user) {
         return (
@@ -267,7 +427,7 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
         );
     }
 
-    if (loading) {
+    if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[200px]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mlb-blue"></div>
@@ -302,57 +462,283 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                     </TabsList>
 
                     <TabsContent value="created">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center">
+                                <h3 className="text-lg font-medium">Your Created Games</h3>
+                                <span className="ml-2 text-sm text-muted-foreground">
+                                    ({games.length} {games.length === 1 ? 'game' : 'games'})
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleRefresh}
+                                    disabled={isRefreshing || isLoading}
+                                    className="ml-2"
+                                    title={lastRefreshed ? `Last refreshed: ${lastRefreshed.toLocaleTimeString()}` : 'Refresh'}
+                                >
+                                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                    <span className="sr-only">Refresh</span>
+                                </Button>
+                                {lastRefreshed && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                        Updated: {lastRefreshed.toLocaleTimeString()}
+                                    </span>
+                                )}
+                            </div>
+                            <Button
+                                onClick={handleCreateGame}
+                                className="bg-mlb-blue hover:bg-blue-700 text-white"
+                                disabled={isCreating}
+                            >
+                                {isCreating ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Creating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <PlusCircle className="h-4 w-4 mr-2" />
+                                        Create Game
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+
                         {games.length === 0 ? (
                             <div className="text-center p-8 border border-gray-200 rounded-lg">
                                 <p className="text-gray-500">You haven't created any games yet.</p>
                                 <Button
-                                    onClick={() => router.push('/create')}
-                                    className="mt-4 bg-mlb-blue hover:bg-blue-700"
+                                    onClick={handleCreateGame}
+                                    className="mt-4 bg-mlb-blue hover:bg-blue-700 text-white"
+                                    disabled={isCreating}
                                 >
-                                    Create a Game
+                                    {isCreating ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        "Create a Game"
+                                    )}
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {games.map((game) => (
-                                    <Card key={game.id} className="overflow-hidden">
-                                        <CardHeader className="bg-gray-50 p-4">
-                                            <CardTitle className="text-lg flex justify-between items-center">
-                                                <span className="truncate">{game.title}</span>
-                                                <div className="flex space-x-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleCopyLink(game.id)}
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        <Copy className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteGame(game.id)}
-                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="p-4">
-                                            <p className="text-sm text-gray-500">
-                                                Created: {new Date(game.created_at).toLocaleDateString()}
-                                            </p>
+                            <>
+                                <div className="relative mb-4">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search games by player name..."
+                                        className="pl-8"
+                                        value={searchQuery}
+                                        onChange={(e) => {
+                                            const newValue = e.target.value;
+                                            setSearchQuery(newValue);
+                                            // Reset to first page when searching
+                                            setCurrentPage(1);
+                                        }}
+                                    />
+                                </div>
+
+                                {filteredGames.length === 0 ? (
+                                    <div className="text-center p-8 border border-gray-200 rounded-lg">
+                                        <p className="text-gray-500">No games match your search.</p>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Player</TableHead>
+                                                    <TableHead>Created</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredGames.map((game) => (
+                                                    <TableRow key={game.id}>
+                                                        <TableCell className="font-medium">
+                                                            {game.title}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {formatDistanceToNow(new Date(game.created_at), { addSuffix: true })}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end space-x-2">
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="icon"
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    handlePlayGame(game.id, e);
+                                                                                    return false;
+                                                                                }}
+                                                                                className="h-8 w-8"
+                                                                                disabled={isPlaying && playingGameId === game.id}
+                                                                                type="button"
+                                                                            >
+                                                                                {isPlaying && playingGameId === game.id ? (
+                                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                ) : (
+                                                                                    <ExternalLink className="h-4 w-4" />
+                                                                                )}
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Play Game</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="icon"
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    handleCopyGameLink(game.id, e);
+                                                                                    return false;
+                                                                                }}
+                                                                                className="h-8 w-8"
+                                                                                disabled={isCopying && copiedGameId === game.id}
+                                                                                type="button"
+                                                                            >
+                                                                                {isCopying && copiedGameId === game.id ? (
+                                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                ) : (
+                                                                                    <Copy className="h-4 w-4" />
+                                                                                )}
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Copy Game Link</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <AlertDialog open={gameToDelete === game.id} onOpenChange={(open: boolean) => !open && setGameToDelete(null)}>
+                                                                                <AlertDialogTrigger asChild>
+                                                                                    <Button
+                                                                                        variant="outline"
+                                                                                        size="icon"
+                                                                                        onClick={(e) => {
+                                                                                            e.preventDefault();
+                                                                                            e.stopPropagation();
+                                                                                            confirmDelete(game.id, e);
+                                                                                            return false;
+                                                                                        }}
+                                                                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                                                        type="button"
+                                                                                    >
+                                                                                        <Trash2 className="h-4 w-4" />
+                                                                                    </Button>
+                                                                                </AlertDialogTrigger>
+                                                                                <AlertDialogContent className="bg-white">
+                                                                                    <AlertDialogHeader>
+                                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                                        <AlertDialogDescription>
+                                                                                            This action cannot be undone. This will permanently delete the game.
+                                                                                        </AlertDialogDescription>
+                                                                                    </AlertDialogHeader>
+                                                                                    <AlertDialogFooter>
+                                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                        <AlertDialogAction
+                                                                                            onClick={(e: React.MouseEvent) => {
+                                                                                                e.preventDefault();
+                                                                                                e.stopPropagation();
+                                                                                                handleDeleteGame(game.id, e);
+                                                                                                return false;
+                                                                                            }}
+                                                                                            disabled={isDeleting}
+                                                                                            className="bg-red-500 hover:bg-red-700"
+                                                                                        >
+                                                                                            {isDeleting ? (
+                                                                                                <>
+                                                                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                                                                    Deleting...
+                                                                                                </>
+                                                                                            ) : (
+                                                                                                "Delete"
+                                                                                            )}
+                                                                                        </AlertDialogAction>
+                                                                                    </AlertDialogFooter>
+                                                                                </AlertDialogContent>
+                                                                            </AlertDialog>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Delete Game</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="text-sm text-muted-foreground">
+                                            Showing {games.length} of {totalItems} games
+                                        </div>
+                                        <div className="flex items-center space-x-2">
                                             <Button
-                                                onClick={() => router.push(`/game/${game.id}`)}
-                                                className="w-full mt-4 bg-mlb-blue hover:bg-blue-700"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage <= 1 || isLoading}
                                             >
-                                                Play Game
+                                                Previous
                                             </Button>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
+                                            <div className="flex items-center space-x-1">
+                                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                    // Show pages around current page
+                                                    let pageToShow;
+                                                    if (totalPages <= 5) {
+                                                        pageToShow = i + 1;
+                                                    } else if (currentPage <= 3) {
+                                                        pageToShow = i + 1;
+                                                    } else if (currentPage >= totalPages - 2) {
+                                                        pageToShow = totalPages - 4 + i;
+                                                    } else {
+                                                        pageToShow = currentPage - 2 + i;
+                                                    }
+
+                                                    return (
+                                                        <Button
+                                                            key={pageToShow}
+                                                            variant={currentPage === pageToShow ? "default" : "outline"}
+                                                            size="sm"
+                                                            className="w-8 h-8 p-0"
+                                                            onClick={() => setCurrentPage(pageToShow)}
+                                                            disabled={isLoading}
+                                                        >
+                                                            {pageToShow}
+                                                        </Button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={currentPage >= totalPages || isLoading}
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </TabsContent>
 

@@ -14,7 +14,6 @@ export async function middleware(req: NextRequest) {
 
     // If accessing API routes and no session, return 401
     if (req.nextUrl.pathname.startsWith('/api/games/user') && !session) {
-        console.log('Middleware: No session found for protected API route');
         return NextResponse.json(
             { error: 'Authentication required', message: 'Please log in to access this resource' },
             { status: 401 }

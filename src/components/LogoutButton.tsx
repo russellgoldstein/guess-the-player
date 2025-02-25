@@ -38,7 +38,6 @@ const LogoutButton = ({
                 return;
             }
 
-            console.log('Logout successful');
             toast({
                 title: 'Logged out',
                 description: 'You have been logged out successfully',

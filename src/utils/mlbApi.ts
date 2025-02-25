@@ -21,7 +21,12 @@ export const EXCLUDED_PLAYER_INFO_FIELDS = [
     'fullLFMName',
     'strikeZoneTop',
     'strikeZoneBottom',
-    'stats'
+    'stats',
+    'useName',
+    'useLastName',
+    'middleName',
+    'useFirstName'
+
 ];
 
 export const EXCLUDED_HITTING_STATS_FIELDS = [
@@ -145,9 +150,17 @@ export const filterHittingStats = (statsData: StatEntry[], awards: Record<string
 
         filteredEntry.season = entry.season;
         if (entry.numTeams && entry.numTeams > 1) {
+            // Get all team names for this season, excluding any undefined/null teams
+            const teamNames = statsBySeason[entry.season]
+                .map(e => e.team?.name)
+                .filter((name): name is string => Boolean(name)); // Only include valid team names
+
             filteredEntry.team = `${entry.numTeams} Teams`;
+            // Store the list of teams for tooltip display
+            filteredEntry.teamDetails = teamNames.join(', ');
         } else {
-            filteredEntry.team = entry.team.name;
+            filteredEntry.team = entry.team?.name || 'Unknown Team';
+            filteredEntry.teamDetails = entry.team?.name || 'Unknown Team';
         }
 
         // Calculate player's age as of April 1st of the season year
@@ -203,9 +216,17 @@ export const filterPitchingStats = (statsData: StatEntry[], awards: Record<strin
 
         filteredEntry.season = entry.season;
         if (entry.numTeams && entry.numTeams > 1) {
+            // Get all team names for this season, excluding any undefined/null teams
+            const teamNames = statsBySeason[entry.season]
+                .map(e => e.team?.name)
+                .filter((name): name is string => Boolean(name)); // Only include valid team names
+
             filteredEntry.team = `${entry.numTeams} Teams`;
+            // Store the list of teams for tooltip display
+            filteredEntry.teamDetails = teamNames.join(', ');
         } else {
-            filteredEntry.team = entry.team.name;
+            filteredEntry.team = entry.team?.name || 'Unknown Team';
+            filteredEntry.teamDetails = entry.team?.name || 'Unknown Team';
         }
 
         // Calculate player's age as of April 1st of the season year

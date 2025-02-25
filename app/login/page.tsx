@@ -24,19 +24,14 @@ const LoginPage = () => {
         const checkSession = async () => {
             try {
                 setIsCheckingSession(true);
-                console.log('Checking for existing session...');
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session) {
-                    console.log('User already logged in:', session.user.id);
-                    console.log('Session expires at:', new Date(session.expires_at! * 1000).toISOString());
                     toast({
                         title: "Already logged in",
                         description: "You are already logged in",
                     });
                     router.push('/');
-                } else {
-                    console.log('No existing session found');
                 }
             } catch (error) {
                 console.error('Error checking session:', error);
@@ -54,7 +49,6 @@ const LoginPage = () => {
         setError(null);
 
         try {
-            console.log('Attempting login for email:', email);
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
             if (error) {
@@ -62,16 +56,12 @@ const LoginPage = () => {
                 throw error;
             }
 
-            console.log('Login successful for user:', data.user?.id);
-            console.log('Session expires at:', new Date(data.session?.expires_at! * 1000).toISOString());
-
             // Verify the session was created
             const { data: { session } } = await supabase.auth.getSession();
-            console.log('Session after login:', session ? 'Valid' : 'Not found');
+
 
             if (session) {
                 // Check if cookies were set properly
-                console.log('Session cookie should be set now');
 
                 toast({
                     title: "Login successful",
@@ -157,7 +147,7 @@ const LoginPage = () => {
 
                         <Button
                             type="submit"
-                            className="w-full bg-mlb-blue hover:bg-mlb-blue/90"
+                            className="w-full bg-mlb-blue hover:bg-mlb-blue/90 text-white"
                             disabled={isLoading}
                         >
                             {isLoading ? (
@@ -166,7 +156,7 @@ const LoginPage = () => {
                                     Signing in...
                                 </>
                             ) : (
-                                'Sign In'
+                                <span className="text-white">Sign In</span>
                             )}
                         </Button>
 

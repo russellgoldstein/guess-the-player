@@ -172,14 +172,16 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
     return (
         <div className="space-y-6">
             <FormItem>
-                <FormLabel>Maximum Guesses</FormLabel>
+                <FormLabel htmlFor="max-guesses">Maximum Guesses</FormLabel>
                 <FormControl>
                     <Input
+                        id="max-guesses"
                         type="number"
                         min={0}
                         max={10}
                         value={options.maxGuesses}
                         onChange={handleMaxGuessesChange}
+                        data-testid="max-guesses-input"
                     />
                 </FormControl>
                 <FormDescription>
@@ -189,8 +191,9 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
 
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <FormLabel className="!mt-0">Enable Hint</FormLabel>
+                    <FormLabel htmlFor="hint-switch">Enable Hint</FormLabel>
                     <Switch
+                        id="hint-switch"
                         checked={options.hint?.enabled || false}
                         onCheckedChange={handleHintToggle}
                         className="data-[state=checked]:bg-mlb-blue data-[state=unchecked]:bg-gray-200 
@@ -199,17 +202,22 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
                             [&>span]:data-[state=checked]:bg-white
                             [&>span]:data-[state=unchecked]:bg-white
                             [&>span]:shadow-sm"
+                        aria-label="Enable Hint"
+                        data-testid="hint-switch"
                     />
                 </div>
                 {options.hint?.enabled && (
                     <FormItem>
+                        <FormLabel htmlFor="hint-text">Hint Text</FormLabel>
                         <FormControl>
                             <Textarea
+                                id="hint-text"
                                 placeholder="Enter a hint that players can reveal if they're stuck..."
                                 value={options.hint?.text || ''}
                                 onChange={handleHintTextChange}
                                 className="resize-none"
                                 rows={3}
+                                data-testid="hint-text-input"
                             />
                         </FormControl>
                         <FormDescription>
@@ -221,8 +229,9 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
 
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <FormLabel className="!mt-0">Enable Progressive Stat Reveal</FormLabel>
+                    <FormLabel htmlFor="progressive-reveal-switch">Enable Progressive Stat Reveal</FormLabel>
                     <Switch
+                        id="progressive-reveal-switch"
                         checked={options.progressiveReveal?.enabled || false}
                         onCheckedChange={handleProgressiveRevealToggle}
                         className="data-[state=checked]:bg-mlb-blue data-[state=unchecked]:bg-gray-200 
@@ -231,19 +240,23 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
                             [&>span]:data-[state=checked]:bg-white
                             [&>span]:data-[state=unchecked]:bg-white
                             [&>span]:shadow-sm"
+                        aria-label="Enable Progressive Reveal"
+                        data-testid="progressive-reveal-switch"
                     />
                 </div>
                 {options.progressiveReveal?.enabled && (
                     <div className="space-y-4">
                         <FormItem>
-                            <FormLabel>Stats Per Reveal</FormLabel>
+                            <FormLabel htmlFor="stats-per-reveal">Stats Per Reveal</FormLabel>
                             <FormControl>
                                 <Input
+                                    id="stats-per-reveal"
                                     type="number"
                                     min={1}
                                     max={5}
                                     value={options.progressiveReveal?.statsPerReveal || 1}
                                     onChange={handleStatsPerRevealChange}
+                                    data-testid="stats-per-reveal-input"
                                 />
                             </FormControl>
                             <FormDescription>
@@ -253,8 +266,9 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
 
                         <FormItem>
                             <div className="flex items-center justify-between mb-4">
-                                <FormLabel className="!mt-0">Use Ordered Reveal</FormLabel>
+                                <FormLabel htmlFor="ordered-reveal-switch">Use Ordered Reveal</FormLabel>
                                 <Switch
+                                    id="ordered-reveal-switch"
                                     checked={options.progressiveReveal?.useOrderedReveal || false}
                                     onCheckedChange={handleUseOrderedRevealToggle}
                                     className="data-[state=checked]:bg-mlb-blue data-[state=unchecked]:bg-gray-200 
@@ -263,6 +277,8 @@ export const GameOptions: React.FC<GameOptionsProps> = ({
                                         [&>span]:data-[state=checked]:bg-white
                                         [&>span]:data-[state=unchecked]:bg-white
                                         [&>span]:shadow-sm"
+                                    aria-label="Use Ordered Reveal"
+                                    data-testid="ordered-reveal-switch"
                                 />
                             </div>
                             <FormDescription>

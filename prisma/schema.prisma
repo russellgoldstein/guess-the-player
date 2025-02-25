@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Game {
+  id                String            @id @default(uuid())
+  title             String
+  creator_id        String?
+  created_at        DateTime          @default(now())
+  game_player_config GamePlayerConfig[]
+  user_guesses      UserGuess[]
+}
+
+model GamePlayerConfig {
+  id            String  @id @default(uuid())
+  game_id       String
+  player_id     Int
+  stats_config  Json
+  game_options  Json
+  game          Game   @relation(fields: [game_id], references: [id])
+}
+
+model UserGuess {
+  id         String   @id @default(uuid())
+  game_id    String
+  user_id    String
+  guess      Int
+  is_correct Boolean
+  created_at DateTime @default(now())
+  game       Game     @relation(fields: [game_id], references: [id])
+} 

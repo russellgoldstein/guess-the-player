@@ -43,7 +43,14 @@ export const ConfigurableHeader: React.FC<ConfigurableHeaderProps> = ({
     };
 
     return (
-        <div className={getClassName()} onClick={handleClick}>
+        <div
+            className={getClassName()}
+            onClick={handleClick}
+            data-testid={`stat-toggle-${statKey}`}
+            role="switch"
+            aria-checked={!isDeselected}
+            aria-label={displayName}
+        >
             {displayName}
         </div>
     );

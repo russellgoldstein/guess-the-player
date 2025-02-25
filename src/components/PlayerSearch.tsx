@@ -78,11 +78,20 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) =>
                         onFocus={() => search.length >= 2 && setOpen(true)}
                         className="w-full px-2 py-1 outline-none"
                         placeholder="Search for a player..."
+                        role="combobox"
+                        aria-expanded={open}
+                        aria-controls="player-search-listbox"
+                        aria-autocomplete="list"
+                        data-testid="player-search-input"
                     />
                 </div>
 
                 {open && (
-                    <div className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] max-h-[300px] overflow-y-auto">
+                    <div
+                        id="player-search-listbox"
+                        role="listbox"
+                        className="absolute top-[calc(100%+4px)] left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-[100] max-h-[300px] overflow-y-auto"
+                    >
                         {loading && (
                             <div className="p-4 text-center text-gray-500">
                                 Loading...
@@ -93,8 +102,11 @@ export const PlayerSearch: React.FC<PlayerSearchProps> = ({ onPlayerSelect }) =>
                                 {players.map((player) => (
                                     <div
                                         key={player.id}
+                                        role="option"
+                                        aria-selected={search === player.fullName}
                                         onClick={() => handleSelect(player.id, player.fullName)}
                                         className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-3"
+                                        data-testid={`player-option-${player.id}`}
                                     >
                                         <Avatar className="h-8 w-8 rounded-full border border-gray-100">
                                             <AvatarImage

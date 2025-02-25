@@ -210,7 +210,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     const sortedPitchingKeys = pitchingStats.length > 0 ? getSortedKeys(pitchingStats[0], pitchingStatMappings) : [];
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-6 bg-white">
+        <div className="max-w-7xl mx-auto px-4 py-6 bg-white" data-testid="player-stats">
             {/* Player Header */}
             <div className="space-y-6 mb-8">
                 <div className="flex gap-6">

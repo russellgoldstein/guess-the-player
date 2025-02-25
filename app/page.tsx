@@ -161,6 +161,7 @@ const CreateGamePage = () => {
                 size="sm"
                 onClick={() => setShowOptions(true)}
                 className="flex items-center gap-2"
+                disabled={!selectedPlayer}
               >
                 <Settings className="h-4 w-4" />
                 Game Options

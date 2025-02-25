@@ -67,6 +67,7 @@ export interface HittingStats {
     rbi: number;
     babip: string;
     awards?: string;
+    age: number | string;
 }
 
 export interface PitchingStats {
@@ -99,6 +100,7 @@ export interface PitchingStats {
     homeRunsPer9: string;
     strikeoutWalkRatio: string;
     awards?: string;
+    age: number | string;
 }
 
 export interface PlayerStatsProps {

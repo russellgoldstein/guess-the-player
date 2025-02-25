@@ -114,7 +114,7 @@ interface StatEntry {
     numTeams?: number;
 }
 
-export const filterHittingStats = (statsData: StatEntry[], awards: Record<string, string[]> = {}): Partial<HittingStats>[] => {
+export const filterHittingStats = (statsData: StatEntry[], awards: Record<string, string[]> = {}, birthDate?: string): Partial<HittingStats>[] => {
     // Group stats by season
     const statsBySeason = statsData.reduce((acc, entry) => {
         const season = entry.season;
@@ -150,6 +150,19 @@ export const filterHittingStats = (statsData: StatEntry[], awards: Record<string
             filteredEntry.team = entry.team.name;
         }
 
+        // Calculate player's age as of April 1st of the season year
+        if (birthDate) {
+            const birthDateObj = new Date(birthDate);
+            const seasonYear = parseInt(entry.season);
+            const seasonStartDate = new Date(seasonYear, 3, 1); // April 1st (months are 0-indexed)
+            const ageInMilliseconds = seasonStartDate.getTime() - birthDateObj.getTime();
+            const ageDate = new Date(ageInMilliseconds);
+            // Calculate age (year 1970 is the epoch start)
+            filteredEntry.age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        } else {
+            filteredEntry.age = '';
+        }
+
         // Add awards for this season if they exist, otherwise set to empty string
         filteredEntry.awards = awards[entry.season] && awards[entry.season].length > 0
             ? awards[entry.season].join(', ')
@@ -159,7 +172,7 @@ export const filterHittingStats = (statsData: StatEntry[], awards: Record<string
     });
 };
 
-export const filterPitchingStats = (statsData: StatEntry[], awards: Record<string, string[]> = {}): Partial<PitchingStats>[] => {
+export const filterPitchingStats = (statsData: StatEntry[], awards: Record<string, string[]> = {}, birthDate?: string): Partial<PitchingStats>[] => {
     // Group stats by season
     const statsBySeason = statsData.reduce((acc, entry) => {
         const season = entry.season;
@@ -193,6 +206,19 @@ export const filterPitchingStats = (statsData: StatEntry[], awards: Record<strin
             filteredEntry.team = `${entry.numTeams} Teams`;
         } else {
             filteredEntry.team = entry.team.name;
+        }
+
+        // Calculate player's age as of April 1st of the season year
+        if (birthDate) {
+            const birthDateObj = new Date(birthDate);
+            const seasonYear = parseInt(entry.season);
+            const seasonStartDate = new Date(seasonYear, 3, 1); // April 1st (months are 0-indexed)
+            const ageInMilliseconds = seasonStartDate.getTime() - birthDateObj.getTime();
+            const ageDate = new Date(ageInMilliseconds);
+            // Calculate age (year 1970 is the epoch start)
+            filteredEntry.age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        } else {
+            filteredEntry.age = '';
         }
 
         // Add awards for this season if they exist, otherwise set to empty string
@@ -261,16 +287,19 @@ export const fetchPlayerData = async (playerId: string | number) => {
             const awardsData = playerData.people[0].awards || [];
             result.awards = filterAndMapAwards(awardsData);
 
+            // Get the player's birth date
+            const birthDate = playerData.people[0].birthDate;
+
             // Pass the awards data to filterPlayerInfo
             result.playerInfo = filterPlayerInfo(playerData.people[0], awardsData);
 
             if (playerData.people[0].stats?.[0]?.splits) {
-                result.hittingStats = filterHittingStats(playerData.people[0].stats[0].splits, result.awards);
+                result.hittingStats = filterHittingStats(playerData.people[0].stats[0].splits, result.awards, birthDate);
             }
-        }
 
-        if (pitchingData.people?.[0]?.stats?.[0]?.splits) {
-            result.pitchingStats = filterPitchingStats(pitchingData.people[0].stats[0].splits, result.awards);
+            if (pitchingData.people?.[0]?.stats?.[0]?.splits) {
+                result.pitchingStats = filterPitchingStats(pitchingData.people[0].stats[0].splits, result.awards, birthDate);
+            }
         }
 
         return result;

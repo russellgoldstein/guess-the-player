@@ -6,6 +6,7 @@ import { supabase } from '@/src/lib/supabaseClient';
 import PlayerStats from '@/src/components/PlayerStats';
 import { PlayerSearch } from '@/src/components/PlayerSearch';
 import { PageWrapper } from '@/src/components/PageWrapper';
+import VictoryModal from '@/src/components/VictoryModal';
 import { User } from '@supabase/supabase-js';
 import {
     Dialog,
@@ -71,11 +72,13 @@ const GamePage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [showGiveUpDialog, setShowGiveUpDialog] = useState(false);
+    const [showVictoryModal, setShowVictoryModal] = useState(false);
     const [guessResult, setGuessResult] = useState<'correct' | 'incorrect' | 'gaveup' | null>(null);
     const [currentGuess, setCurrentGuess] = useState<Player | null>(null);
     const [guesses, setGuesses] = useState<Player[]>([]);
     const [user, setUser] = useState<User | null>(null);
     const [showHint, setShowHint] = useState(false);
+    const [correctPlayerName, setCorrectPlayerName] = useState<string>('');
     const [revealedStats, setRevealedStats] = useState<{
         info: string[];
         hitting: string[];
@@ -137,6 +140,62 @@ const GamePage = () => {
 
         fetchGame();
     }, [gameId]);
+
+    useEffect(() => {
+        const fetchPlayerName = async () => {
+            if (!game) return;
+
+            try {
+                const playerId = game.game_player_config[0].player_id;
+
+                // First try to get the player from the MLB API
+                try {
+                    const response = await fetch(`/api/players/${playerId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.fullName) {
+                            setCorrectPlayerName(data.fullName);
+                            return;
+                        }
+                    }
+                } catch (apiError) {
+                    console.warn('Could not fetch player from API, falling back to database:', apiError);
+                }
+
+                // Fallback to database
+                const { data, error } = await supabase
+                    .from('players')
+                    .select('fullName')
+                    .eq('id', playerId)
+                    .single();
+
+                if (error) {
+                    // If there's an error with the database query, try to get the name from the game title
+                    if (game.title && game.title.includes(' - ')) {
+                        const playerNameFromTitle = game.title.split(' - ')[1]?.trim();
+                        if (playerNameFromTitle) {
+                            setCorrectPlayerName(playerNameFromTitle);
+                            return;
+                        }
+                    }
+                    throw error;
+                }
+
+                if (data && data.fullName) {
+                    setCorrectPlayerName(data.fullName);
+                } else {
+                    // Default fallback
+                    setCorrectPlayerName('the player');
+                }
+            } catch (err) {
+                console.error('Error fetching player name:', err);
+                // Set a default name if all methods fail
+                setCorrectPlayerName('the player');
+            }
+        };
+
+        fetchPlayerName();
+    }, [game]);
 
     const handleGuess = (player: Player) => {
         setCurrentGuess(player);
@@ -250,6 +309,7 @@ const GamePage = () => {
 
         if (isCorrect) {
             setGuessResult('correct');
+            setShowVictoryModal(true);
         } else {
             if (maxGuesses && maxGuesses > 0 && newGuesses.length >= maxGuesses) {
                 setGuessResult('gaveup');
@@ -437,6 +497,16 @@ const GamePage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Victory Modal */}
+            <VictoryModal
+                open={showVictoryModal}
+                onOpenChange={setShowVictoryModal}
+                gameId={gameId as string}
+                playerName={correctPlayerName || 'the player'}
+                guessCount={guesses.length}
+                maxGuesses={game?.game_player_config[0].game_options?.maxGuesses}
+            />
 
             {/* Guess Confirmation Dialog */}
             <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>

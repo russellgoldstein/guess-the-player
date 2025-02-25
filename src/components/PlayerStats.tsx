@@ -149,17 +149,20 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         onStatsChange(type, selectedKeys, deselectedKeys);
     };
 
-    const filterVisibleStats = <T extends object>(stats: T, selectedKeys: string[]): T => {
+    const filterVisibleStats = <T extends object>(stats: T, selectedKeys: string[]): Partial<T> => {
         if (configurable || showAllStats) {
             return stats;
         }
-        const filteredStats = { ...stats };
+
+        // Only include keys that are in the selectedKeys array
+        const filteredStats: Partial<T> = {};
         Object.keys(stats).forEach(key => {
-            const k = key as keyof T;
-            if (!selectedKeys.includes(key)) {
-                (filteredStats[k] as unknown) = '-';
+            if (selectedKeys.includes(key)) {
+                const k = key as keyof T;
+                filteredStats[k] = stats[k];
             }
         });
+
         return filteredStats;
     };
 
@@ -178,8 +181,8 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
             return allKeys;
         }
 
-        // Filter out deselected keys
-        return allKeys.filter(key => !deselected.includes(key));
+        // Only show keys that are in the selected array
+        return allKeys.filter(key => selected.includes(key));
     };
 
     if (isLoading) {
@@ -243,8 +246,8 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                             )}
                         </div>
                         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                            {sortedInfoKeys.map((key) => {
-                                const value = visiblePlayerInfo[key];
+                            {getVisibleKeys(sortedInfoKeys, selectedInfo, deselectedInfo).map((key) => {
+                                const value = visiblePlayerInfo[key as keyof typeof visiblePlayerInfo];
                                 const humanReadableKey = playerInfoMappings[key]?.label || key;
                                 if (typeof value === 'object' && value !== null) {
                                     return null; // Skip nested objects in the grid
@@ -342,9 +345,10 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                         <TableBody>
                                             {hittingStats.map((stat, index) => {
                                                 const visibleStats = filterVisibleStats<HittingStats>(stat as HittingStats, selectedHittingStats);
+                                                const visibleKeys = getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats);
                                                 return (
                                                     <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                        {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map(key => (
+                                                        {visibleKeys.map(key => (
                                                             <TableCell
                                                                 key={key}
                                                                 className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
@@ -352,7 +356,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                                     : 'text-gray-700'
                                                                     }`}
                                                             >
-                                                                {String(visibleStats[key as keyof HittingStats] || '')}
+                                                                {String(visibleStats[key as keyof typeof visibleStats] || '')}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>
@@ -410,9 +414,10 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                         <TableBody>
                                             {pitchingStats.map((stat, index) => {
                                                 const visibleStats = filterVisibleStats<PitchingStats>(stat as PitchingStats, selectedPitchingStats);
+                                                const visibleKeys = getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats);
                                                 return (
                                                     <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                        {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map(key => (
+                                                        {visibleKeys.map(key => (
                                                             <TableCell
                                                                 key={key}
                                                                 className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
@@ -420,7 +425,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                                     : 'text-gray-700'
                                                                     }`}
                                                             >
-                                                                {String(visibleStats[key as keyof PitchingStats] || '')}
+                                                                {String(visibleStats[key as keyof typeof visibleStats] || '')}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>

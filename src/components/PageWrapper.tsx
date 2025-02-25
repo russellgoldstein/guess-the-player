@@ -1,7 +1,8 @@
+'use client';
+
 import { User } from '@supabase/supabase-js';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
     DropdownMenu,
@@ -55,7 +56,7 @@ export const PageWrapper = ({ children }: PageWrapperProps) => {
                         <NavigationMenu className="hidden md:flex">
                             <NavigationMenuList>
                                 <NavigationMenuItem>
-                                    <Link href="/" legacyBehavior passHref>
+                                    <Link href="/create-game" legacyBehavior passHref>
                                         <NavigationMenuLink className="px-4 py-2 text-sm text-gray-700 hover:text-mlb-blue">
                                             Create Game
                                         </NavigationMenuLink>

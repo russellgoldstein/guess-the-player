@@ -218,21 +218,6 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     const sortedHittingKeys = hittingStats.length > 0 ? getSortedKeys(hittingStats[0], hittingStatMappings) : [];
     const sortedPitchingKeys = pitchingStats.length > 0 ? getSortedKeys(pitchingStats[0], pitchingStatMappings) : [];
 
-    // Check if awards are actually present in the data for debugging
-    const hasHittingAwards = hittingStats.some(stat => 'awards' in stat && stat.awards);
-    const hasPitchingAwards = pitchingStats.some(stat => 'awards' in stat && stat.awards);
-
-    console.log('Debug awards:', {
-        hasHittingAwards,
-        hasPitchingAwards,
-        selectedHittingStats,
-        selectedPitchingStats,
-        sortedHittingKeys,
-        sortedPitchingKeys,
-        hittingStatsWithAwards: hittingStats.filter(stat => 'awards' in stat && stat.awards),
-        pitchingStatsWithAwards: pitchingStats.filter(stat => 'awards' in stat && stat.awards)
-    });
-
     return (
         <div className="max-w-7xl mx-auto px-4 py-6 bg-white" data-testid="player-stats">
             {/* Player Header */}

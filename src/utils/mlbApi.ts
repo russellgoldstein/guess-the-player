@@ -235,16 +235,10 @@ export const filterAndMapAwards = (awardsData: any[]): Record<string, string[]> 
         return {};
     }
 
-    // Debug log to see all awards before filtering
-    console.log('All awards before filtering:', awardsData.map(a => ({ id: a.id, name: a.name })));
-
     // Only include the specific major awards by ID
     const majorAwards = awardsData.filter(award =>
         ALLOWED_AWARD_IDS.includes(award.id)
     );
-
-    // Debug log to see filtered awards
-    console.log('Filtered major awards:', majorAwards.map(a => ({ id: a.id, name: a.name })));
 
     // Group awards by season
     const awardsBySeason: Record<string, string[]> = {};

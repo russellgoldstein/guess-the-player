@@ -84,10 +84,10 @@ const CreateAccountPage = () => {
 
                         <Button
                             type="submit"
-                            className="w-full bg-mlb-blue hover:bg-mlb-blue/90"
+                            className="w-full bg-mlb-blue hover:bg-mlb-blue/90 text-white"
                             disabled={isLoading}
                         >
-                            {isLoading ? 'Creating Account...' : 'Create Account'}
+                            {isLoading ? <span className="text-white">Creating Account...</span> : <span className="text-white">Create Account</span>}
                         </Button>
 
                         <p className="text-center text-sm text-gray-600">

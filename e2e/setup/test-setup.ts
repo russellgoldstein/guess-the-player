@@ -338,7 +338,7 @@ async function globalSetup() {
                     // Create the game record
                     const game = {
                       id: gameId,
-                      title: body.title || \`Game for \${body.player_id}\`,
+                      title: body.title || \`\${body.player_id}\`,
                       creator_id: body.creator_id || null,
                       created_at: new Date().toISOString()
                     };

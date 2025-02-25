@@ -15,6 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface PlayerStatsProps {
     playerId: number;
@@ -113,9 +114,29 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         if (selected.includes(attribute)) {
             selected = selected.filter(attr => attr !== attribute);
             deselected.push(attribute);
+
+            // If we're deselecting 'team', also deselect 'teamDetails'
+            if (attribute === 'team') {
+                // Add teamDetails to deselected if it's not already there
+                if (!deselected.includes('teamDetails')) {
+                    deselected.push('teamDetails');
+                }
+                // Remove teamDetails from selected if it's there
+                selected = selected.filter(attr => attr !== 'teamDetails');
+            }
         } else {
             deselected = deselected.filter(attr => attr !== attribute);
             selected.push(attribute);
+
+            // If we're selecting 'team', also select 'teamDetails'
+            if (attribute === 'team') {
+                // Remove teamDetails from deselected if it's there
+                deselected = deselected.filter(attr => attr !== 'teamDetails');
+                // Add teamDetails to selected if it's not already there
+                if (!selected.includes('teamDetails')) {
+                    selected.push('teamDetails');
+                }
+            }
         }
 
         onStatsChange(type, selected, deselected);
@@ -144,22 +165,36 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         } else {
             // If keys are selected, only the non-selected ones should be deselected
             deselectedKeys = allKeys.filter(key => !selectedKeys.includes(key));
+
+            // If 'team' is selected, make sure 'teamDetails' is not in the deselected list
+            if (selectedKeys.includes('team')) {
+                deselectedKeys = deselectedKeys.filter(key => key !== 'teamDetails');
+            }
         }
 
         onStatsChange(type, selectedKeys, deselectedKeys);
     };
 
-    const filterVisibleStats = <T extends object>(stats: T, selectedKeys: string[]): T => {
+    const filterVisibleStats = <T extends object>(stats: T, selectedKeys: string[]): Partial<T> => {
         if (configurable || showAllStats) {
             return stats;
         }
-        const filteredStats = { ...stats };
+
+        // Only include keys that are in the selectedKeys array
+        const filteredStats: Partial<T> = {};
         Object.keys(stats).forEach(key => {
-            const k = key as keyof T;
-            if (!selectedKeys.includes(key)) {
-                (filteredStats[k] as unknown) = '-';
+            if (selectedKeys.includes(key)) {
+                const k = key as keyof T;
+                filteredStats[k] = stats[k];
+            }
+
+            // Always include teamDetails if team is selected
+            if (key === 'teamDetails' && selectedKeys.includes('team')) {
+                const k = key as keyof T;
+                filteredStats[k] = stats[k];
             }
         });
+
         return filteredStats;
     };
 
@@ -175,11 +210,12 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     const getVisibleKeys = (allKeys: string[], selected: string[], deselected: string[]) => {
         // When configurable is true or showAllStats is true, show all columns
         if (configurable || showAllStats) {
-            return allKeys;
+            // Filter out teamDetails as it should only be used in conjunction with team
+            return allKeys.filter(key => key !== 'teamDetails');
         }
 
-        // Filter out deselected keys
-        return allKeys.filter(key => !deselected.includes(key));
+        // Only show keys that are in the selected array, but never include teamDetails
+        return allKeys.filter(key => selected.includes(key) && key !== 'teamDetails');
     };
 
     if (isLoading) {
@@ -243,8 +279,8 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                             )}
                         </div>
                         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                            {sortedInfoKeys.map((key) => {
-                                const value = visiblePlayerInfo[key];
+                            {getVisibleKeys(sortedInfoKeys, selectedInfo, deselectedInfo).map((key) => {
+                                const value = visiblePlayerInfo[key as keyof typeof visiblePlayerInfo];
                                 const humanReadableKey = playerInfoMappings[key]?.label || key;
                                 if (typeof value === 'object' && value !== null) {
                                     return null; // Skip nested objects in the grid
@@ -342,9 +378,10 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                         <TableBody>
                                             {hittingStats.map((stat, index) => {
                                                 const visibleStats = filterVisibleStats<HittingStats>(stat as HittingStats, selectedHittingStats);
+                                                const visibleKeys = getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats);
                                                 return (
                                                     <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                        {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map(key => (
+                                                        {visibleKeys.map(key => (
                                                             <TableCell
                                                                 key={key}
                                                                 className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
@@ -352,7 +389,22 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                                     : 'text-gray-700'
                                                                     }`}
                                                             >
-                                                                {String(visibleStats[key as keyof HittingStats] || '')}
+                                                                {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
+                                                                    <TooltipProvider>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <span className="underline decoration-dotted cursor-help">
+                                                                                    {String(visibleStats[key as keyof typeof visibleStats] || '')}
+                                                                                </span>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent side="top" className="bg-white border border-gray-200 shadow-md">
+                                                                                <p>{visibleStats.teamDetails}</p>
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                ) : (
+                                                                    String(visibleStats[key as keyof typeof visibleStats] || '')
+                                                                )}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>
@@ -410,9 +462,10 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                         <TableBody>
                                             {pitchingStats.map((stat, index) => {
                                                 const visibleStats = filterVisibleStats<PitchingStats>(stat as PitchingStats, selectedPitchingStats);
+                                                const visibleKeys = getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats);
                                                 return (
                                                     <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                        {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map(key => (
+                                                        {visibleKeys.map(key => (
                                                             <TableCell
                                                                 key={key}
                                                                 className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
@@ -420,7 +473,22 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                                     : 'text-gray-700'
                                                                     }`}
                                                             >
-                                                                {String(visibleStats[key as keyof PitchingStats] || '')}
+                                                                {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
+                                                                    <TooltipProvider>
+                                                                        <Tooltip>
+                                                                            <TooltipTrigger asChild>
+                                                                                <span className="underline decoration-dotted cursor-help">
+                                                                                    {String(visibleStats[key as keyof typeof visibleStats] || '')}
+                                                                                </span>
+                                                                            </TooltipTrigger>
+                                                                            <TooltipContent side="top" className="bg-white border border-gray-200 shadow-md">
+                                                                                <p>{visibleStats.teamDetails}</p>
+                                                                            </TooltipContent>
+                                                                        </Tooltip>
+                                                                    </TooltipProvider>
+                                                                ) : (
+                                                                    String(visibleStats[key as keyof typeof visibleStats] || '')
+                                                                )}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>

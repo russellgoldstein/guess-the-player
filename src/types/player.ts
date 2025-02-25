@@ -42,6 +42,7 @@ export interface StatEntry<T> {
 
 export interface HittingStats {
     team: string;
+    teamDetails: string;
     season: string;
     gamesPlayed: number;
     runs: number;
@@ -72,6 +73,7 @@ export interface HittingStats {
 
 export interface PitchingStats {
     team: string;
+    teamDetails: string;
     season: string;
     gamesPlayed: number;
     gamesStarted: number;

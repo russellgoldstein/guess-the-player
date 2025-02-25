@@ -64,7 +64,28 @@ export const EXCLUDED_PITCHING_STATS_FIELDS = [
     'strikePercentage',
 ];
 
-export const filterPlayerInfo = (playerData: any): Partial<PlayerInfo> => {
+export const ALLOWED_AWARD_IDS = [
+    // National League Awards
+    'NLAS',    // NL All-Star
+    'NLGG',    // Rawlings NL Gold Glove
+    'NLCY',    // NL Cy Young
+    'NLROY',   // Jackie Robinson NL Rookie of the Year
+    'NLSS',    // NL Silver Slugger
+    'NLMVP',   // NL MVP
+
+    // American League Awards (same awards but for AL)
+    'ALAS',    // AL All-Star
+    'ALGG',    // Rawlings AL Gold Glove
+    'ALCY',    // AL Cy Young
+    'ALROY',   // Jackie Robinson AL Rookie of the Year
+    'ALSS',    // AL Silver Slugger
+    'ALMVP',   // AL MVP
+
+    // Hall of Fame
+    'MLBHOF'   // MLB Hall of Fame
+];
+
+export const filterPlayerInfo = (playerData: any, awardsData: any[] = []): Partial<PlayerInfo> => {
     const filteredData = { ...playerData };
 
     // Extract nested fields
@@ -72,6 +93,10 @@ export const filterPlayerInfo = (playerData: any): Partial<PlayerInfo> => {
     filteredData.batSide = playerData.batSide?.description || '';
     filteredData.pitchHand = playerData.pitchHand?.description || '';
     filteredData.imageUrl = `https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_213,q_auto:best/v1/people/${playerData.id}/headshot/67/current`;
+
+    // Add Hall of Fame status
+    filteredData.hallOfFamer = awardsData.some(award => award.id === 'MLBHOF') ? 'Yes' : 'No';
+
     // Remove excluded fields
     EXCLUDED_PLAYER_INFO_FIELDS.forEach(field => {
         delete filteredData[field];
@@ -89,7 +114,7 @@ interface StatEntry {
     numTeams?: number;
 }
 
-export const filterHittingStats = (statsData: StatEntry[]): Partial<HittingStats>[] => {
+export const filterHittingStats = (statsData: StatEntry[], awards: Record<string, string[]> = {}): Partial<HittingStats>[] => {
     // Group stats by season
     const statsBySeason = statsData.reduce((acc, entry) => {
         const season = entry.season;
@@ -124,11 +149,17 @@ export const filterHittingStats = (statsData: StatEntry[]): Partial<HittingStats
         } else {
             filteredEntry.team = entry.team.name;
         }
+
+        // Add awards for this season if they exist, otherwise set to empty string
+        filteredEntry.awards = awards[entry.season] && awards[entry.season].length > 0
+            ? awards[entry.season].join(', ')
+            : '';
+
         return filteredEntry;
     });
 };
 
-export const filterPitchingStats = (statsData: StatEntry[]): Partial<PitchingStats>[] => {
+export const filterPitchingStats = (statsData: StatEntry[], awards: Record<string, string[]> = {}): Partial<PitchingStats>[] => {
     // Group stats by season
     const statsBySeason = statsData.reduce((acc, entry) => {
         const season = entry.season;
@@ -163,15 +194,54 @@ export const filterPitchingStats = (statsData: StatEntry[]): Partial<PitchingSta
         } else {
             filteredEntry.team = entry.team.name;
         }
+
+        // Add awards for this season if they exist, otherwise set to empty string
+        filteredEntry.awards = awards[entry.season] && awards[entry.season].length > 0
+            ? awards[entry.season].join(', ')
+            : '';
+
         return filteredEntry;
     });
+};
+
+export const filterAndMapAwards = (awardsData: any[]): Record<string, string[]> => {
+    if (!awardsData || !Array.isArray(awardsData)) {
+        return {};
+    }
+
+    // Debug log to see all awards before filtering
+    console.log('All awards before filtering:', awardsData.map(a => ({ id: a.id, name: a.name })));
+
+    // Only include the specific major awards by ID
+    const majorAwards = awardsData.filter(award =>
+        ALLOWED_AWARD_IDS.includes(award.id)
+    );
+
+    // Debug log to see filtered awards
+    console.log('Filtered major awards:', majorAwards.map(a => ({ id: a.id, name: a.name })));
+
+    // Group awards by season
+    const awardsBySeason: Record<string, string[]> = {};
+
+    majorAwards.forEach(award => {
+        const season = award.season;
+        if (!season) return;
+
+        if (!awardsBySeason[season]) {
+            awardsBySeason[season] = [];
+        }
+
+        awardsBySeason[season].push(award.name);
+    });
+
+    return awardsBySeason;
 };
 
 export const fetchPlayerData = async (playerId: string | number) => {
     try {
         const [playerResponse, pitchingResponse] = await Promise.all([
-            fetch(`${MLB_API_BASE_URL}/people/${playerId}?hydrate=stats(group=hitting,type=yearByYear)`),
-            fetch(`${MLB_API_BASE_URL}/people/${playerId}?hydrate=stats(group=pitching,type=yearByYear)`)
+            fetch(`${MLB_API_BASE_URL}/people/${playerId}?hydrate=stats(group=hitting,type=yearByYear),awards`),
+            fetch(`${MLB_API_BASE_URL}/people/${playerId}?hydrate=stats(group=pitching,type=yearByYear),awards`)
         ]);
 
         const [playerData, pitchingData] = await Promise.all([
@@ -182,19 +252,25 @@ export const fetchPlayerData = async (playerId: string | number) => {
         const result = {
             playerInfo: null as Partial<PlayerInfo> | null,
             hittingStats: [] as Partial<HittingStats>[],
-            pitchingStats: [] as Partial<PitchingStats>[]
+            pitchingStats: [] as Partial<PitchingStats>[],
+            awards: {} as Record<string, string[]>
         };
 
         if (playerData.people?.[0]) {
-            result.playerInfo = filterPlayerInfo(playerData.people[0]);
+            // Process awards data first so we can use it in filterPlayerInfo
+            const awardsData = playerData.people[0].awards || [];
+            result.awards = filterAndMapAwards(awardsData);
+
+            // Pass the awards data to filterPlayerInfo
+            result.playerInfo = filterPlayerInfo(playerData.people[0], awardsData);
 
             if (playerData.people[0].stats?.[0]?.splits) {
-                result.hittingStats = filterHittingStats(playerData.people[0].stats[0].splits);
+                result.hittingStats = filterHittingStats(playerData.people[0].stats[0].splits, result.awards);
             }
         }
 
         if (pitchingData.people?.[0]?.stats?.[0]?.splits) {
-            result.pitchingStats = filterPitchingStats(pitchingData.people[0].stats[0].splits);
+            result.pitchingStats = filterPitchingStats(pitchingData.people[0].stats[0].splits, result.awards);
         }
 
         return result;

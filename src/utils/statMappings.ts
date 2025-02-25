@@ -17,13 +17,14 @@ export const playerInfoMappings: Record<string, StatMapping> = {
     primaryPosition: { label: 'Position', order: 11 },
     batSide: { label: 'Batting Side', order: 12 },
     pitchHand: { label: 'Pitching Hand', order: 13 },
-    draftYear: { label: 'Draft Year', order: 14 },
-    mlbDebutDate: { label: 'MLB Debut Date', order: 15 },
-    lastPlayedDate: { label: 'Last Played Date', order: 16 },
-    useName: { label: 'Use Name', order: 17 },
-    useLastName: { label: 'Use Last Name', order: 18 },
-    middleName: { label: 'Middle Name', order: 19 },
-    nickName: { label: 'Nickname', order: 20 },
+    hallOfFamer: { label: 'Hall of Famer', order: 14 },
+    draftYear: { label: 'Draft Year', order: 15 },
+    mlbDebutDate: { label: 'MLB Debut Date', order: 16 },
+    lastPlayedDate: { label: 'Last Played Date', order: 17 },
+    useName: { label: 'Use Name', order: 18 },
+    useLastName: { label: 'Use Last Name', order: 19 },
+    middleName: { label: 'Middle Name', order: 20 },
+    nickName: { label: 'Nickname', order: 21 },
 };
 
 // Based on Baseball Reference's Standard Batting table
@@ -53,6 +54,7 @@ export const hittingStatMappings: Record<string, StatMapping> = {
     intentionalWalks: { label: 'IBB', order: 23 },
     stolenBasePercentage: { label: 'SB%', order: 24 },
     babip: { label: 'BABIP', order: 25 },
+    awards: { label: 'Awards', order: 26 },
 };
 
 // Based on Baseball Reference's Standard Pitching table
@@ -88,4 +90,11 @@ export const pitchingStatMappings: Record<string, StatMapping> = {
     saveOpportunities: { label: 'SVO', order: 29 },
     holds: { label: 'HLD', order: 30 },
     blownSaves: { label: 'BS', order: 31 },
+    awards: { label: 'Awards', order: 32 },
+};
+
+// Award mappings
+export const awardsMappings: Record<string, StatMapping> = {
+    season: { label: 'Season', order: 1 },
+    awards: { label: 'Awards', order: 2 },
 }; 

@@ -73,11 +73,15 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                     onStatsChange('info', [], Object.keys(data.playerInfo));
 
                     if (data.hittingStats.length > 0 && selectedHittingStats.length === 0) {
-                        onStatsChange('hitting', Object.keys(data.hittingStats[0]), []);
+                        // Initialize with all available keys when no selection exists
+                        const hittingKeys = Object.keys(data.hittingStats[0]);
+                        onStatsChange('hitting', hittingKeys, []);
                     }
 
                     if (data.pitchingStats.length > 0 && selectedPitchingStats.length === 0) {
-                        onStatsChange('pitching', Object.keys(data.pitchingStats[0]), []);
+                        // Initialize with all available keys when no selection exists
+                        const pitchingKeys = Object.keys(data.pitchingStats[0]);
+                        onStatsChange('pitching', pitchingKeys, []);
                     }
                 }
             } catch (error) {
@@ -118,6 +122,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     };
 
     const handleToggle = (key: string, type: 'info' | 'hitting' | 'pitching') => {
+        // Remove special handling for awards - allow it to be toggled like any other field
         toggleAttribute(key, type);
     };
 
@@ -159,9 +164,12 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     };
 
     const getSortedKeys = <T extends Record<string, any>>(obj: T, mappings: Record<string, StatMapping>): (keyof T)[] => {
-        return (Object.keys(obj) as (keyof T)[])
+        // Get all keys that exist in the mappings
+        const mappedKeys = (Object.keys(obj) as (keyof T)[])
             .filter(key => key in mappings)
             .sort((a, b) => (mappings[String(a)]?.order || 0) - (mappings[String(b)]?.order || 0));
+
+        return mappedKeys;
     };
 
     const getVisibleKeys = (allKeys: string[], selected: string[], deselected: string[]) => {
@@ -169,7 +177,8 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         if (configurable || showAllStats) {
             return allKeys;
         }
-        // When not configurable, only show selected columns
+
+        // Filter out deselected keys
         return allKeys.filter(key => !deselected.includes(key));
     };
 
@@ -208,6 +217,21 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     const sortedInfoKeys = getSortedKeys(visiblePlayerInfo, playerInfoMappings);
     const sortedHittingKeys = hittingStats.length > 0 ? getSortedKeys(hittingStats[0], hittingStatMappings) : [];
     const sortedPitchingKeys = pitchingStats.length > 0 ? getSortedKeys(pitchingStats[0], pitchingStatMappings) : [];
+
+    // Check if awards are actually present in the data for debugging
+    const hasHittingAwards = hittingStats.some(stat => 'awards' in stat && stat.awards);
+    const hasPitchingAwards = pitchingStats.some(stat => 'awards' in stat && stat.awards);
+
+    console.log('Debug awards:', {
+        hasHittingAwards,
+        hasPitchingAwards,
+        selectedHittingStats,
+        selectedPitchingStats,
+        sortedHittingKeys,
+        sortedPitchingKeys,
+        hittingStatsWithAwards: hittingStats.filter(stat => 'awards' in stat && stat.awards),
+        pitchingStatsWithAwards: pitchingStats.filter(stat => 'awards' in stat && stat.awards)
+    });
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-6 bg-white" data-testid="player-stats">
@@ -301,7 +325,9 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                             configurable={configurable}
                                             allKeys={sortedHittingKeys}
                                             selectedKeys={selectedHittingStats}
-                                            onToggleAll={(keys) => handleToggleAll('hitting', keys)}
+                                            onToggleAll={(keys) => {
+                                                handleToggleAll('hitting', keys);
+                                            }}
                                         />
                                     )}
                                 </CardTitle>
@@ -336,9 +362,12 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                         {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map(key => (
                                                             <TableCell
                                                                 key={key}
-                                                                className="text-left whitespace-nowrap font-medium text-gray-700 py-2 px-2 first:pl-4 last:pr-4 text-sm"
+                                                                className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
+                                                                    ? 'text-mlb-blue font-bold'
+                                                                    : 'text-gray-700'
+                                                                    }`}
                                                             >
-                                                                {String(visibleStats[key as keyof HittingStats])}
+                                                                {String(visibleStats[key as keyof HittingStats] || '')}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>
@@ -364,7 +393,9 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                             configurable={configurable}
                                             allKeys={sortedPitchingKeys}
                                             selectedKeys={selectedPitchingStats}
-                                            onToggleAll={(keys) => handleToggleAll('pitching', keys)}
+                                            onToggleAll={(keys) => {
+                                                handleToggleAll('pitching', keys);
+                                            }}
                                         />
                                     )}
                                 </CardTitle>
@@ -399,9 +430,12 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                         {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map(key => (
                                                             <TableCell
                                                                 key={key}
-                                                                className="text-left whitespace-nowrap font-medium text-gray-700 py-2 px-2 first:pl-4 last:pr-4 text-sm"
+                                                                className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
+                                                                    ? 'text-mlb-blue font-bold'
+                                                                    : 'text-gray-700'
+                                                                    }`}
                                                             >
-                                                                {String(visibleStats[key as keyof PitchingStats])}
+                                                                {String(visibleStats[key as keyof PitchingStats] || '')}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>

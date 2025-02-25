@@ -33,6 +33,7 @@ export interface PlayerInfo {
     batSide: string;
     pitchHand: string;
     imageUrl?: string;
+    hallOfFamer?: string;
 }
 
 export interface StatEntry<T> {
@@ -65,6 +66,7 @@ export interface HittingStats {
     totalBases: number;
     rbi: number;
     babip: string;
+    awards?: string;
 }
 
 export interface PitchingStats {
@@ -96,6 +98,7 @@ export interface PitchingStats {
     hitsPer9Inn: string;
     homeRunsPer9: string;
     strikeoutWalkRatio: string;
+    awards?: string;
 }
 
 export interface PlayerStatsProps {
@@ -136,4 +139,8 @@ export interface GamePlayerConfig {
             deselected: string[];
         };
     };
+}
+
+export interface PlayerAwards {
+    [season: string]: string[];
 } 

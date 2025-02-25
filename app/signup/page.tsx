@@ -1,4 +1,4 @@
-import SignupForm from '@/src/components/SignupForm';
+import SignupForm from '@/src/components/SignUpForm';
 
 export const metadata = {
     title: 'Sign Up - Guess the Player',

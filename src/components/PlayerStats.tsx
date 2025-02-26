@@ -315,7 +315,14 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
             </div>
 
             {/* Stats Tabs */}
-            <Tabs defaultValue={hasVisibleHitting ? "hitting" : hasVisiblePitching ? "pitching" : undefined} className="w-full">
+            <Tabs
+                defaultValue={
+                    playerInfo?.primaryPosition === "Pitcher"
+                        ? (hasVisiblePitching ? "pitching" : hasVisibleHitting ? "hitting" : undefined)
+                        : (hasVisibleHitting ? "hitting" : hasVisiblePitching ? "pitching" : undefined)
+                }
+                className="w-full"
+            >
                 <TabsList className="w-full justify-start border-b border-gray-200 bg-transparent mb-6 gap-2">
                     {hasVisibleHitting && (
                         <TabsTrigger

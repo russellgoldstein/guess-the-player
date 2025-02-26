@@ -34,6 +34,36 @@ interface User {
     id: string;
 }
 
+const defaultGameOptions: GameOptions = {
+    maxGuesses: 3,
+    hint: {
+        enabled: false,
+        text: ''
+    },
+    progressiveReveal: {
+        enabled: true,
+        statsPerReveal: 1,
+        protectedStats: [
+            'fullName',
+            'imageUrl',
+            'currentTeam',
+            'firstName',
+            'lastName',
+            'middleName',
+            'useFirstName',
+            'useLastName',
+            'useMiddleName',
+            'nickName'
+        ],
+        orderedStats: {
+            info: [],
+            hitting: [],
+            pitching: []
+        },
+        useOrderedReveal: false
+    }
+}
+
 const CreateGamePage = () => {
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
     const [statsConfig, setStatsConfig] = useState<StatsConfig>({
@@ -41,35 +71,7 @@ const CreateGamePage = () => {
         hitting: { selected: [], deselected: [] },
         pitching: { selected: [], deselected: [] }
     });
-    const [gameOptions, setGameOptions] = useState<GameOptions>({
-        maxGuesses: 3,
-        hint: {
-            enabled: false,
-            text: ''
-        },
-        progressiveReveal: {
-            enabled: true,
-            statsPerReveal: 1,
-            protectedStats: [
-                'fullName',
-                'imageUrl',
-                'currentTeam',
-                'firstName',
-                'lastName',
-                'middleName',
-                'useFirstName',
-                'useLastName',
-                'useMiddleName',
-                'nickName'
-            ],
-            orderedStats: {
-                info: [],
-                hitting: [],
-                pitching: []
-            },
-            useOrderedReveal: false
-        }
-    });
+    const [gameOptions, setGameOptions] = useState<GameOptions>(defaultGameOptions);
     const [link, setLink] = useState('');
     const [user, setUser] = useState<User | null>(null);
     const [showOptions, setShowOptions] = useState(false);
@@ -87,6 +89,22 @@ const CreateGamePage = () => {
 
     const handlePlayerSelect = (player: Player) => {
         setSelectedPlayer(player);
+
+        // Reset statsConfig when a new player is selected
+        setStatsConfig({
+            info: { selected: [], deselected: [] },
+            hitting: { selected: [], deselected: [] },
+            pitching: { selected: [], deselected: [] }
+        });
+
+        // Reset gameOptions to default values
+        setGameOptions(defaultGameOptions);
+
+        // Clear any previously generated link
+        setLink('');
+
+        // Close options dialog if it's open
+        setShowOptions(false);
     };
 
     const handleStatsChange = (type: 'info' | 'hitting' | 'pitching', selected: string[], deselected: string[]) => {

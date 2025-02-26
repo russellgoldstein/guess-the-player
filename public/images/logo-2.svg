@@ -1,0 +1,41 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#e63946" />
+  <circle cx="100" cy="100" r="85" fill="#f1faee" />
+  
+  <!-- Left seam with curved path reaching the red circle -->
+  <path d="M40,55 C70,100 65,115 45,145" fill="none" stroke="#e63946" stroke-width="2.5" />
+  <!-- Individual stitches for left curved seam -->
+  <path d="M35,55 L40,55 L45,60" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M42,65 L47,65 L52,70" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M48,75 L53,75 L58,80" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M53,85 L58,85 L63,90" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M57,95 L62,95 L67,100" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M57,105 L62,105 L67,110" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M52,115 L57,115 L62,120" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M47,125 L52,125 L57,130" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M42,135 L47,135 L52,140" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M40,145 L45,145 L50,150" stroke="#e63946" stroke-width="2.5" fill="none" />
+  
+  <!-- Right seam with curved path reaching the red circle -->
+  <path d="M160,55 C130,100 135,115 155,145" fill="none" stroke="#e63946" stroke-width="2.5" />
+  <!-- Individual stitches for right curved seam -->
+  <path d="M155,60 L160,55 L165,55" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M148,70 L153,65 L158,65" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M142,80 L147,75 L152,75" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M137,90 L142,85 L147,85" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M133,100 L138,95 L143,95" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M133,110 L138,105 L143,105" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M138,120 L143,115 L148,115" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M143,130 L148,125 L153,125" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M148,140 L153,135 L158,135" stroke="#e63946" stroke-width="2.5" fill="none" />
+  <path d="M150,150 L155,145 L160,145" stroke="#e63946" stroke-width="2.5" fill="none" />
+  
+  <!-- Centered bar chart -->
+  <rect x="65" y="110" width="15" height="30" fill="#1d3557" />
+  <rect x="92.5" y="90" width="15" height="50" fill="#1d3557" />
+  <rect x="120" y="70" width="15" height="70" fill="#1d3557" />
+  
+  <!-- Lightning bolt for "attack" - yellow -->
+  <path d="M130,50 L115,80 L130,80 L105,115 L115,85 L100,85 L120,50 Z" fill="#ffd60a" stroke="#1d3557" stroke-width="1.5" />
+</svg>

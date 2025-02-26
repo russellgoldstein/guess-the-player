@@ -9,6 +9,7 @@ import { Button } from "../../src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
 import { useToast } from "../../src/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import Link from 'next/link';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -104,7 +105,22 @@ const LoginPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+            <div className="mb-8 flex flex-col items-center">
+                <div className="w-64 h-64 mb-0">
+                    <img
+                        src="/images/logo.svg"
+                        alt="Stat Attack Logo"
+                        width={144}
+                        height={144}
+                        className="w-full h-full"
+                    />
+                </div>
+                <Link href="/" className="text-2xl font-bold text-mlb-blue -mt-4">
+                    Stat Attack
+                </Link>
+            </div>
+
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center text-mlb-blue">

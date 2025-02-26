@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
 
 ## App Overview
-- **Name:** Guess the Player
+- **Name:** Stat Attack
 - **Description:** A web app that allows users to create and share sports trivia challenges by customizing player stats for others to guess.
 - **Tagline:** "Challenge your friends with custom sports trivia!"
 

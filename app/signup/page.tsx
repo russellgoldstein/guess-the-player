@@ -1,7 +1,7 @@
 import SignupForm from '@/src/components/SignUpForm';
 
 export const metadata = {
-    title: 'Sign Up - Guess the Player',
+    title: 'Sign Up - Stat Attack',
     description: 'Create an account to start creating and playing baseball guessing games',
 };
 

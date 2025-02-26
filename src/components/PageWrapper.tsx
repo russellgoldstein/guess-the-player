@@ -52,7 +52,7 @@ export const PageWrapper = ({ children }: PageWrapperProps) => {
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <Link href="/" className="text-xl font-bold text-mlb-blue hover:text-mlb-blue/90">
-                            Guess the Player
+                            Stat Attack
                         </Link>
                         <NavigationMenu className="hidden md:flex">
                             <NavigationMenuList className="flex space-x-2">

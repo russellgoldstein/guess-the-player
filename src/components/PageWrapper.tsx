@@ -4,6 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import Image from 'next/image';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,8 +52,19 @@ export const PageWrapper = ({ children }: PageWrapperProps) => {
             <header className="bg-white border-b border-gray-200">
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                        <Link href="/" className="text-xl font-bold text-mlb-blue hover:text-mlb-blue/90">
-                            Stat Attack
+                        <Link href="/" className="flex items-center">
+                            <div className="w-24 h-24 flex items-center justify-center">
+                                <img
+                                    src="/images/logo.svg"
+                                    alt="Stat Attack Logo"
+                                    width={32}
+                                    height={32}
+                                    className="w-full h-full"
+                                />
+                            </div>
+                            <span className="text-xl font-bold text-mlb-blue hover:text-mlb-blue/90 ml-0.5">
+                                Stat Attack
+                            </span>
                         </Link>
                         <NavigationMenu className="hidden md:flex">
                             <NavigationMenuList className="flex space-x-2">

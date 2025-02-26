@@ -75,7 +75,27 @@ export default function HomePage() {
   return (
     <PageWrapper>
       <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col items-center justify-center gap-12">
+        <div className="flex flex-col items-center justify-center gap-8">
+          {/* Logo and Hero Section */}
+          <div className="text-center">
+            <div className="flex justify-center mb-0">
+              <div className="w-64 h-64">
+                <img
+                  src="/images/logo.svg"
+                  alt="Stat Attack Logo"
+                  width={192}
+                  height={192}
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold text-mlb-blue mb-4 -mt-4">
+              Stat Attack
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Guess players based on their stats and challenge your friends
+            </p>
+          </div>
 
           {/* User Games List or Account Section */}
           <div className="mt-8 w-full max-w-4xl">

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <bx:export>
+      <bx:file format="svg" href="#object-0" excluded="true"/>
+      <bx:file format="svg" href="#object-1" path="Untitled 2.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-2" path="Untitled 3.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-3" path="Untitled 4.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-7" path="Untitled 8.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-8" path="Untitled 9.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-9" path="Untitled 10.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-10" path="Untitled 11.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-11" path="Untitled 12.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-12" path="Untitled 13.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-13" path="Untitled 14.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-16" path="Untitled 17.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-17" path="Untitled 18.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-18" path="Untitled 19.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-19" path="Untitled 20.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-20" path="Untitled 21.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-21" path="Untitled 22.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-22" path="Untitled 23.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-23" path="Untitled 24.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-24" path="Untitled 25.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-25" path="Untitled 26.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-26" path="Untitled 27.svg" excluded="true"/>
+      <bx:file format="svg" href="#object-27" path="Untitled 28.svg" excluded="true"/>
+    </bx:export>
+  </defs>
+  <circle cx="237.33" cy="219.173" r="95" fill="#e63946" id="object-0"/>
+  <circle cx="237.33" cy="219.173" r="85" fill="#f1faee" id="object-1"/>
+  <path d="M 180.514 153.609 C 210.514 198.609 199.249 253.382 179.249 283.382" fill="none" stroke="#e63946" stroke-width="2.5" id="object-2"/>
+  <path d="M 181.94 161.725 L 186.6 161.725 L 191.261 167.395" stroke="#e63946" stroke-width="2.5" fill="none" id="object-3" style="transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.707107, -0.707107, 0.707107, 0.707107, -0.000003, 0.000007)"/>
+  <path d="M 193.413 218.002 L 198.413 218.002 L 203.413 223.002" stroke="#e63946" stroke-width="2.5" fill="none" id="object-7"/>
+  <path d="M 192.219 227.45 L 197.219 227.45 L 202.219 232.45" stroke="#e63946" stroke-width="2.5" fill="none" id="object-8"/>
+  <path d="M 191.199 236.911 L 195.867 236.911 L 200.534 241.911" stroke="#e63946" stroke-width="2.5" fill="none" id="object-9" style=""/>
+  <path d="M 188.363 246.48 L 193.363 246.48 L 198.363 251.48" stroke="#e63946" stroke-width="2.5" fill="none" id="object-10"/>
+  <path d="M 186.459 255.239 L 191.459 255.239 L 196.459 260.239" stroke="#e63946" stroke-width="2.5" fill="none" id="object-11"/>
+  <path d="M 183.061 264.014 L 188.061 264.014 L 193.061 269.014" stroke="#e63946" stroke-width="2.5" fill="none" id="object-12"/>
+  <path d="M 292.488 152.552 C 262.488 197.552 272.807 254.771 292.807 284.771" fill="none" stroke="#e63946" stroke-width="2.5" id="object-13"/>
+  <path d="M 268.864 220.208 L 273.864 215.208 L 278.864 215.208" stroke="#e63946" stroke-width="2.5" fill="none" id="object-16" style="transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.965926, 0.258819, -0.258819, 0.965926, 0.000001, 0.000002)"/>
+  <path d="M 269.065 228.515 L 274.065 223.515 L 279.065 223.515" stroke="#e63946" stroke-width="2.5" fill="none" id="object-17"/>
+  <path d="M 270.078 238.118 L 275.078 233.118 L 280.078 233.118" stroke="#e63946" stroke-width="2.5" fill="none" id="object-18"/>
+  <path d="M 270.772 247.002 L 275.772 242.002 L 280.772 242.002" stroke="#e63946" stroke-width="2.5" fill="none" id="object-19"/>
+  <path d="M 273.268 255.153 L 278.268 250.153 L 283.268 250.153" stroke="#e63946" stroke-width="2.5" fill="none" id="object-20"/>
+  <path d="M 275.5 263.952 L 280.5 258.952 L 285.5 258.952" stroke="#e63946" stroke-width="2.5" fill="none" id="object-21"/>
+  <path d="M 279.139 272.727 L 284.139 267.727 L 289.139 267.727" stroke="#e63946" stroke-width="2.5" fill="none" id="object-22"/>
+  <path d="M 283.485 281.259 L 288.485 276.259 L 293.485 276.259" stroke="#e63946" stroke-width="2.5" fill="none" id="object-23"/>
+  <rect x="202.33" y="229.173" width="15" height="30" fill="#1d3557" id="object-24"/>
+  <rect x="229.83" y="209.173" width="15" height="50" fill="#1d3557" id="object-25"/>
+  <path d="M 268.699 209.89 L 273.699 204.89 L 278.699 204.89" stroke="#e63946" stroke-width="2.5" fill="none" id="path-7" style="transform-origin: 273.699px 207.39px;" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 0.000003, 0.000002)"/>
+  <path d="M 269.676 199.795 L 274.676 194.795 L 279.676 194.795" stroke="#e63946" stroke-width="2.5" fill="none" id="path-8" style="transform-origin: 274.676px 197.295px;" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 0.000001, -0.000001)"/>
+  <rect x="257.33" y="189.173" width="15" height="70" fill="#1d3557" id="object-26"/>
+  <path d="M 267.33 169.173 L 252.33 199.173 L 267.33 199.173 L 242.33 234.173 L 252.33 204.173 L 237.33 204.173 L 257.33 169.173 L 267.33 169.173 Z" fill="#ffd60a" stroke="#1d3557" stroke-width="1.5" id="object-27"/>
+  <path d="M 185.556 170.174 L 190.216 170.174 L 194.877 175.844" stroke="#e63946" stroke-width="2.5" fill="none" id="path-1" style="transform-origin: 190.216px 173.009px;" transform="matrix(0.707107, -0.707107, 0.707107, 0.707107, 0.000002, -0.000003)"/>
+  <path d="M 188.966 178.672 L 193.626 178.672 L 198.287 184.342" stroke="#e63946" stroke-width="2.5" fill="none" id="path-2" style="transform-origin: 193.626px 181.507px;" transform="matrix(0.707107, -0.707107, 0.707107, 0.707107, -0.000001, -0.000006)"/>
+  <path d="M 192.139 189.485 L 196.488 189.485 L 200.838 195.155" stroke="#e63946" stroke-width="2.5" fill="none" id="path-3" style="transform-origin: 196.488px 192.32px;" transform="matrix(0.866025, -0.5, 0.5, 0.866025, 0.000003, -0.000003)"/>
+  <path d="M 193.498 198.864 L 198.158 198.864 L 202.819 204.534" stroke="#e63946" stroke-width="2.5" fill="none" id="path-4" style="transform-origin: 198.158px 201.699px;" transform="matrix(0.866025, -0.5, 0.5, 0.866025, 0, -0.000003)"/>
+  <path d="M 193.911 208.131 L 198.571 208.131 L 203.232 213.801" stroke="#e63946" stroke-width="2.5" fill="none" id="path-5" style="transform-origin: 198.571px 210.966px;" transform="matrix(0.965926, -0.258819, 0.258819, 0.965926, 0, 0)"/>
+  <path d="M 178.899 272.4 L 183.899 272.4 L 188.899 277.4" stroke="#e63946" stroke-width="2.5" fill="none" id="path-6"/>
+  <path d="M 272.23 189.682 L 277.23 184.682 L 282.23 184.682" stroke="#e63946" stroke-width="2.5" fill="none" id="path-9" style="transform-origin: 277.23px 187.182px;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, -0.000008, 0.000004)"/>
+  <path d="M 274.342 180.894 L 279.342 175.894 L 284.342 175.894" stroke="#e63946" stroke-width="2.5" fill="none" id="path-10" style="transform-origin: 279.342px 178.394px;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 0, 0.000006)"/>
+  <path d="M 277.75 173.04 L 282.75 168.04 L 287.75 168.04" stroke="#e63946" stroke-width="2.5" fill="none" id="path-11" style="transform-origin: 282.75px 170.54px;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 0.000003, 0.000003)"/>
+  <path d="M 281.11 164.196 L 286.11 159.196 L 291.11 159.196" stroke="#e63946" stroke-width="2.5" fill="none" id="path-12" style="transform-origin: 286.11px 161.696px;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 0.000005, -0.000014)"/>
+</svg>

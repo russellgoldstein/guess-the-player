@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { ResponsiveTooltip } from "./ui/responsive-tooltip";
 
 interface PlayerStatsProps {
     playerId: number;
@@ -337,7 +338,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                 {hasVisibleHitting && (
                     <TabsContent value="hitting">
                         <Card className="border-gray-100 shadow-sm">
-                            <CardHeader className="border-b border-gray-100 bg-gray-50">
+                            <CardHeader className="border-b border-gray-100 bg-gray-50 pb-4">
                                 <CardTitle className="flex items-center justify-between text-mlb-blue">
                                     Hitting Statistics
                                     {configurable && (
@@ -353,7 +354,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                     )}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-0 w-full">
+                            <CardContent className="p-0 pt-4 w-full">
                                 <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                     <Table className="w-full table-auto">
                                         <TableHeader>
@@ -390,20 +391,17 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                                     }`}
                                                             >
                                                                 {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
-                                                                    <TooltipProvider>
-                                                                        <Tooltip>
-                                                                            <TooltipTrigger asChild>
-                                                                                <span className="underline decoration-dotted cursor-help">
-                                                                                    {String(visibleStats[key as keyof typeof visibleStats] || '')}
-                                                                                </span>
-                                                                            </TooltipTrigger>
-                                                                            <TooltipContent side="top" className="bg-white border border-gray-200 shadow-md">
-                                                                                <p>{visibleStats.teamDetails}</p>
-                                                                            </TooltipContent>
-                                                                        </Tooltip>
-                                                                    </TooltipProvider>
+                                                                    <ResponsiveTooltip
+                                                                        content={<p>{visibleStats.teamDetails}</p>}
+                                                                        side="top"
+                                                                        contentClassName="bg-white border border-gray-200 shadow-md"
+                                                                    >
+                                                                        <span className="underline decoration-dotted cursor-help">
+                                                                            {String(visibleStats[key as keyof typeof visibleStats] || '')}
+                                                                        </span>
+                                                                    </ResponsiveTooltip>
                                                                 ) : (
-                                                                    String(visibleStats[key as keyof typeof visibleStats] || '')
+                                                                    visibleStats[key as keyof typeof visibleStats] === 0 ? "0" : String(visibleStats[key as keyof typeof visibleStats] || '')
                                                                 )}
                                                             </TableCell>
                                                         ))}
@@ -421,7 +419,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                 {hasVisiblePitching && (
                     <TabsContent value="pitching">
                         <Card className="border-gray-100 shadow-sm">
-                            <CardHeader className="border-b border-gray-100 bg-gray-50">
+                            <CardHeader className="border-b border-gray-100 bg-gray-50 pb-4">
                                 <CardTitle className="flex items-center justify-between text-mlb-blue">
                                     Pitching Statistics
                                     {configurable && (
@@ -437,7 +435,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                     )}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="p-0 w-full">
+                            <CardContent className="p-0 pt-4 w-full">
                                 <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                     <Table className="w-full table-auto">
                                         <TableHeader>
@@ -474,20 +472,17 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                                     }`}
                                                             >
                                                                 {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
-                                                                    <TooltipProvider>
-                                                                        <Tooltip>
-                                                                            <TooltipTrigger asChild>
-                                                                                <span className="underline decoration-dotted cursor-help">
-                                                                                    {String(visibleStats[key as keyof typeof visibleStats] || '')}
-                                                                                </span>
-                                                                            </TooltipTrigger>
-                                                                            <TooltipContent side="top" className="bg-white border border-gray-200 shadow-md">
-                                                                                <p>{visibleStats.teamDetails}</p>
-                                                                            </TooltipContent>
-                                                                        </Tooltip>
-                                                                    </TooltipProvider>
+                                                                    <ResponsiveTooltip
+                                                                        content={<p>{visibleStats.teamDetails}</p>}
+                                                                        side="top"
+                                                                        contentClassName="bg-white border border-gray-200 shadow-md"
+                                                                    >
+                                                                        <span className="underline decoration-dotted cursor-help">
+                                                                            {String(visibleStats[key as keyof typeof visibleStats] || '')}
+                                                                        </span>
+                                                                    </ResponsiveTooltip>
                                                                 ) : (
-                                                                    String(visibleStats[key as keyof typeof visibleStats] || '')
+                                                                    visibleStats[key as keyof typeof visibleStats] === 0 ? "0" : String(visibleStats[key as keyof typeof visibleStats] || '')
                                                                 )}
                                                             </TableCell>
                                                         ))}

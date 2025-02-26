@@ -153,6 +153,11 @@ const CreateGamePage = () => {
     return (
         <PageWrapper>
             <div className="container mx-auto px-4 py-8">
+                <h1>Search for a Player to Create a Game</h1>
+                <div className="mb-4">
+                    <PlayerSearch onPlayerSelect={handlePlayerSelect} />
+                </div>
+
                 <div className="mb-8 space-y-4">
                     <div className="flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-sm border border-gray-100">
                         <div className="w-full flex justify-end mb-4">
@@ -211,22 +216,21 @@ const CreateGamePage = () => {
                         )}
                     </div>
                 </div>
-                <h1>Search for a Player to Create a Game</h1>
-                <PlayerSearch onPlayerSelect={handlePlayerSelect} />
                 {selectedPlayer && (
-                    <PlayerStats
-                        playerId={selectedPlayer.id}
-                        configurable={true}
-                        selectedInfo={statsConfig.info.selected}
-                        deselectedInfo={statsConfig.info.deselected}
-                        selectedHittingStats={statsConfig.hitting.selected}
-                        deselectedHittingStats={statsConfig.hitting.deselected}
-                        selectedPitchingStats={statsConfig.pitching.selected}
-                        deselectedPitchingStats={statsConfig.pitching.deselected}
-                        onStatsChange={handleStatsChange}
-                    />
+                    <div className="mb-4">
+                        <PlayerStats
+                            playerId={selectedPlayer.id}
+                            configurable={true}
+                            selectedInfo={statsConfig.info.selected}
+                            deselectedInfo={statsConfig.info.deselected}
+                            selectedHittingStats={statsConfig.hitting.selected}
+                            deselectedHittingStats={statsConfig.hitting.deselected}
+                            selectedPitchingStats={statsConfig.pitching.selected}
+                            deselectedPitchingStats={statsConfig.pitching.deselected}
+                            onStatsChange={handleStatsChange}
+                        />
+                    </div>
                 )}
-
                 <Dialog open={showOptions} onOpenChange={setShowOptions}>
                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-white">
                         <DialogHeader>

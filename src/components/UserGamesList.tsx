@@ -380,7 +380,7 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
 
     const handleCreateGame = () => {
         setIsCreating(true);
-        router.push('/create');
+        router.push('/create-game');
     };
 
     const handlePlayGame = (gameId: string, event?: React.MouseEvent) => {

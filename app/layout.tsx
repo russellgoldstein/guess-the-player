@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Guess the Player",
+  title: "Stat Attack",
   description: "A baseball player guessing game",
 };
 

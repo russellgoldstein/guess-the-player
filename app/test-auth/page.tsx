@@ -17,9 +17,12 @@ export default function TestAuthPage() {
         setDebug('Starting Google OAuth flow...');
 
         try {
-            // Basic OAuth call with no options
+            // Add redirectTo option with current origin
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
+                options: {
+                    redirectTo: window.location.origin,
+                }
             });
 
             if (error) throw error;

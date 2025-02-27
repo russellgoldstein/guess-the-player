@@ -9,11 +9,14 @@ import { UserGamesList } from '@/src/components/UserGamesList';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/src/lib/supabaseClient';
 import { useToast } from '@/src/components/ui/use-toast';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const checkUserSession = async () => {
@@ -71,6 +74,36 @@ export default function HomePage() {
 
     return () => subscription.unsubscribe();
   }, [toast]);
+
+  useEffect(() => {
+    // Check if this is a callback from OAuth
+    const code = searchParams.get('code');
+    const linkAccounts = searchParams.get('link_accounts') === 'true';
+
+    if (code) {
+      const handleAuthCallback = async () => {
+        try {
+          // Exchange the code for a session
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (error) {
+            console.error('Error exchanging code for session:', error);
+            return;
+          }
+
+          // Clear the code from the URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          // Refresh the page to update the auth state
+          router.refresh();
+        } catch (error) {
+          console.error('Error handling auth callback:', error);
+        }
+      };
+
+      handleAuthCallback();
+    }
+  }, [searchParams, router]);
 
   return (
     <PageWrapper>

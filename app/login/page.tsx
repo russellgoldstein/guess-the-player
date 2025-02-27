@@ -135,9 +135,12 @@ const LoginPageContent = () => {
         setError(null);
 
         try {
-            // Simplified OAuth call - let Supabase handle the redirect
+            // Add redirectTo option with current origin
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
+                options: {
+                    redirectTo: window.location.origin,
+                }
             });
 
             if (error) throw error;
@@ -171,7 +174,7 @@ const LoginPageContent = () => {
             const { data: googleData, error: googleError } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback?link_accounts=true`,
+                    redirectTo: `${window.location.origin}?link_accounts=true`,
                 }
             });
 

@@ -110,31 +110,43 @@ const HomePageContent = () => {
     if (code) {
       const handleAuthCallback = async () => {
         try {
-          // Check if we have a code verifier in storage
-          const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
-
-          if (!codeVerifier) {
-            console.log('No code verifier found in storage, skipping code exchange');
-            // Just clear the code from the URL without attempting to exchange
-            window.history.replaceState({}, document.title, window.location.pathname);
-            return;
-          }
+          console.log('Detected auth callback with code');
 
           // Exchange the code for a session
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
           if (error) {
             console.error('Error exchanging code for session:', error);
+            toast({
+              title: "Authentication Error",
+              description: "There was a problem completing your login",
+              variant: "destructive",
+            });
             return;
           }
+
+          console.log('Successfully exchanged code for session');
 
           // Clear the code from the URL
           window.history.replaceState({}, document.title, window.location.pathname);
 
-          // Refresh the page to update the auth state
-          router.refresh();
+          // Show success message
+          toast({
+            title: "Login Successful",
+            description: "You have been successfully logged in",
+          });
+
+          // Force a refresh to update the auth state
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
         } catch (error) {
           console.error('Error handling auth callback:', error);
+          toast({
+            title: "Authentication Error",
+            description: "There was a problem completing your login",
+            variant: "destructive",
+          });
           // Clear the code from the URL even if there's an error
           window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -142,7 +154,7 @@ const HomePageContent = () => {
 
       handleAuthCallback();
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, toast]);
 
   return (
     <div className="container mx-auto px-4 py-12">

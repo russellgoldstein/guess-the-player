@@ -180,16 +180,21 @@ const LoginPageContent = () => {
             // Add a small delay to ensure clearing is complete
             await new Promise(resolve => setTimeout(resolve, 100));
 
+            // Get the current URL for the redirect
+            const currentOrigin = window.location.origin;
+            console.log(`Current origin for redirect: ${currentOrigin}`);
+
             // Add redirectTo option with current origin
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin,
+                    redirectTo: `${currentOrigin}/`,
                 }
             });
 
             if (error) throw error;
 
+            console.log('Google OAuth initiated, redirecting to Google...');
             // The user will be redirected to Google for authentication
             // No need to navigate or show success message here
         } catch (error) {

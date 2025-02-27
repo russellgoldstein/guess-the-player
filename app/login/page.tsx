@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { useToast } from "../../src/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import Link from 'next/link';
+import { GoogleSignIn } from '@/src/components/GoogleSignIn';
+import { Separator } from '@/src/components/ui/separator';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -175,14 +177,27 @@ const LoginPage = () => {
                                 <span className="text-white">Sign In</span>
                             )}
                         </Button>
-
-                        <p className="text-center text-sm text-gray-600">
-                            Don't have an account?{' '}
-                            <a href="/create-account" className="text-mlb-blue hover:underline">
-                                Create one here
-                            </a>
-                        </p>
                     </form>
+
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <Separator />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-muted-foreground">
+                                Or continue with
+                            </span>
+                        </div>
+                    </div>
+
+                    <GoogleSignIn />
+
+                    <p className="text-center text-sm text-gray-600 mt-4">
+                        Don't have an account?{' '}
+                        <a href="/create-account" className="text-mlb-blue hover:underline">
+                            Create one here
+                        </a>
+                    </p>
                 </CardContent>
             </Card>
         </div>

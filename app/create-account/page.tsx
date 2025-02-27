@@ -7,6 +7,8 @@ import { supabase } from '../../src/lib/supabaseClient';
 import { Input } from "../../src/components/ui/input";
 import { Button } from "../../src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../src/components/ui/card";
+import { GoogleSignIn } from '@/src/components/GoogleSignIn';
+import { Separator } from '@/src/components/ui/separator';
 
 const CreateAccountPage = () => {
     const [email, setEmail] = useState('');
@@ -89,14 +91,27 @@ const CreateAccountPage = () => {
                         >
                             {isLoading ? <span className="text-white">Creating Account...</span> : <span className="text-white">Create Account</span>}
                         </Button>
-
-                        <p className="text-center text-sm text-gray-600">
-                            Already have an account?{' '}
-                            <a href="/login" className="text-mlb-blue hover:underline">
-                                Sign in here
-                            </a>
-                        </p>
                     </form>
+
+                    <div className="relative my-6">
+                        <div className="absolute inset-0 flex items-center">
+                            <Separator />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-2 text-muted-foreground">
+                                Or continue with
+                            </span>
+                        </div>
+                    </div>
+
+                    <GoogleSignIn />
+
+                    <p className="text-center text-sm text-gray-600 mt-4">
+                        Already have an account?{' '}
+                        <a href="/login" className="text-mlb-blue hover:underline">
+                            Sign in here
+                        </a>
+                    </p>
                 </CardContent>
             </Card>
         </div>

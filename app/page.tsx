@@ -110,6 +110,16 @@ const HomePageContent = () => {
     if (code) {
       const handleAuthCallback = async () => {
         try {
+          // Check if we have a code verifier in storage
+          const codeVerifier = localStorage.getItem('supabase.auth.code_verifier');
+
+          if (!codeVerifier) {
+            console.log('No code verifier found in storage, skipping code exchange');
+            // Just clear the code from the URL without attempting to exchange
+            window.history.replaceState({}, document.title, window.location.pathname);
+            return;
+          }
+
           // Exchange the code for a session
           const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
@@ -125,6 +135,8 @@ const HomePageContent = () => {
           router.refresh();
         } catch (error) {
           console.error('Error handling auth callback:', error);
+          // Clear the code from the URL even if there's an error
+          window.history.replaceState({}, document.title, window.location.pathname);
         }
       };
 
@@ -163,7 +175,53 @@ const HomePageContent = () => {
               <p className="text-gray-500">Loading user data...</p>
             </div>
           ) : user ? (
-            <UserGamesList user={user} />
+            <>
+              <UserGamesList user={user} />
+
+              {/* Debug button to manually clear auth state */}
+              <div className="mt-4 w-full max-w-md mx-auto">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs text-gray-500 border-gray-300"
+                  onClick={() => {
+                    // Clear all localStorage
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                      const key = localStorage.key(i);
+                      if (key && (
+                        key.startsWith('supabase') ||
+                        key.includes('auth') ||
+                        key.includes('sb-')
+                      )) {
+                        keysToRemove.push(key);
+                      }
+                    }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                    // Clear cookies
+                    document.cookie.split(';').forEach(cookie => {
+                      const [name] = cookie.trim().split('=');
+                      if (name) {
+                        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+                      }
+                    });
+
+                    console.log('Manually cleared all auth state from home page');
+                    toast({
+                      title: "Auth state cleared",
+                      description: "All authentication data has been cleared",
+                    });
+
+                    // Force reload
+                    window.location.href = '/';
+                  }}
+                >
+                  Clear Auth State (Debug)
+                </Button>
+              </div>
+            </>
           ) : (
             <div className="text-center bg-gray-50 p-8 rounded-xl shadow-sm">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">

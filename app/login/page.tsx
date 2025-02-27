@@ -40,11 +40,39 @@ const LoginPageContent = () => {
     const searchParams = useSearchParams();
     const { toast } = useToast();
 
+    // Function to clear any potential leftover auth state
+    const clearAuthState = () => {
+        // Clear any potential leftover PKCE data
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (
+                key.startsWith('supabase.auth.') ||
+                key.includes('code_verifier')
+            )) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        // Also clear the specific code verifier
+        localStorage.removeItem('supabase.auth.code_verifier');
+
+        console.log('Cleared auth state on login page load');
+    };
+
     useEffect(() => {
         // Check if user is already logged in
         const checkSession = async () => {
             try {
                 setIsCheckingSession(true);
+
+                // Clear any potential leftover PKCE data if we're on the login page
+                // This prevents automatic re-authentication
+                if (window.location.pathname === '/login') {
+                    clearAuthState();
+                }
+
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session) {
@@ -135,6 +163,23 @@ const LoginPageContent = () => {
         setError(null);
 
         try {
+            // First, clear any existing auth state
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (
+                    key.startsWith('supabase.auth.') ||
+                    key.includes('code_verifier')
+                )) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            console.log('Cleared auth state before Google login');
+
+            // Add a small delay to ensure clearing is complete
+            await new Promise(resolve => setTimeout(resolve, 100));
+
             // Add redirectTo option with current origin
             const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
@@ -317,6 +362,47 @@ const LoginPageContent = () => {
                                     Sign up
                                 </Link>
                             </p>
+                        </div>
+
+                        {/* Debug button to manually clear auth state */}
+                        <div className="mt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs text-gray-500 border-gray-300"
+                                onClick={() => {
+                                    // Clear all localStorage
+                                    const keysToRemove = [];
+                                    for (let i = 0; i < localStorage.length; i++) {
+                                        const key = localStorage.key(i);
+                                        if (key && (
+                                            key.startsWith('supabase') ||
+                                            key.includes('auth') ||
+                                            key.includes('sb-')
+                                        )) {
+                                            keysToRemove.push(key);
+                                        }
+                                    }
+                                    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+                                    // Clear cookies
+                                    document.cookie.split(';').forEach(cookie => {
+                                        const [name] = cookie.trim().split('=');
+                                        if (name) {
+                                            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+                                        }
+                                    });
+
+                                    console.log('Manually cleared all auth state');
+                                    toast({
+                                        title: "Auth state cleared",
+                                        description: "All authentication data has been cleared",
+                                    });
+                                }}
+                            >
+                                Clear Auth State (Debug)
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>

@@ -26,8 +26,7 @@ const LogoutButton = ({
         setIsLoading(true);
 
         try {
-            // Sign out from Supabase with scope: 'global' to clear all sessions
-            const { error } = await supabase.auth.signOut({ scope: 'global' });
+            const { error } = await supabase.auth.signOut();
 
             if (error) {
                 console.error('Logout error:', error.message);
@@ -39,42 +38,14 @@ const LogoutButton = ({
                 return;
             }
 
-            // Clear all Supabase auth-related items from localStorage
-            const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && (
-                    key.startsWith('supabase.') ||
-                    key.includes('supabase') ||
-                    key.includes('sb-') ||
-                    key.includes('auth')
-                )) {
-                    keysToRemove.push(key);
-                }
-            }
-
-            // Remove the keys after collecting them
-            keysToRemove.forEach(key => localStorage.removeItem(key));
-
-            // Also clear cookies related to authentication
-            document.cookie.split(';').forEach(cookie => {
-                const [name] = cookie.trim().split('=');
-                if (name && (
-                    name.includes('supabase') ||
-                    name.includes('sb-') ||
-                    name.includes('auth')
-                )) {
-                    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-                }
-            });
-
             toast({
                 title: 'Logged out',
                 description: 'You have been logged out successfully',
             });
 
-            // Force a hard refresh to clear any in-memory state
-            window.location.href = '/';
+            // Refresh the page to update the UI
+            router.push('/');
+            router.refresh();
         } catch (error) {
             console.error('Unexpected error during logout:', error);
             toast({

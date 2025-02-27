@@ -1,47 +1,8 @@
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Database } from '../types/supabase';
 
-// Function to create a Supabase client with options
-const createSupabaseClient = () => {
-    // Check if we're on the login page and should disable auto session restoration
-    const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
-
-    // If on login page, create client with session restoration disabled
-    if (isLoginPage) {
-        // Clear any existing auth data first
-        if (typeof localStorage !== 'undefined') {
-            const keysToRemove = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && (
-                    key.startsWith('supabase.auth.') ||
-                    key.includes('code_verifier')
-                )) {
-                    keysToRemove.push(key);
-                }
-            }
-            keysToRemove.forEach(key => localStorage.removeItem(key));
-            console.log('Cleared auth state before creating Supabase client');
-        }
-
-        // Create client with auto session restoration disabled
-        return createClientComponentClient<Database>({
-            options: {
-                auth: {
-                    persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: false, // Disable automatic detection of auth codes in URL
-                }
-            }
-        });
-    }
-
-    // For other pages, use default behavior
-    return createClientComponentClient<Database>();
-};
-
 // Create a single instance of the Supabase client to be used throughout the app
-export const supabase = createSupabaseClient();
+export const supabase = createClientComponentClient<Database>();
 
 // Export a function to get the current session
 export const getCurrentSession = async () => {

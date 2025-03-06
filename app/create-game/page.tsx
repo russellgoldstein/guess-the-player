@@ -91,6 +91,7 @@ const CreateGamePage = () => {
         setSelectedPlayer(player);
 
         // Reset statsConfig when a new player is selected
+        // This ensures that the PlayerStats component will properly initialize the stats
         setStatsConfig({
             info: { selected: [], deselected: [] },
             hitting: { selected: [], deselected: [] },

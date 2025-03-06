@@ -44,6 +44,7 @@ interface Game {
     title: string;
     created_at: string;
     creator_id: string | null;
+    completion_date?: string | null;
     game_player_config: {
         id: string;
         game_id: string;
@@ -72,7 +73,9 @@ interface UserGamesListProps {
 export const UserGamesList = ({ user }: UserGamesListProps) => {
     const [activeTab, setActiveTab] = useState<string>("created");
     const [games, setGames] = useState<Game[]>([]);
+    const [completedGames, setCompletedGames] = useState<Game[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingCompleted, setIsLoadingCompleted] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const hasShownAuthErrorToast = useRef(false);
     const fetchAttempts = useRef(0);
@@ -86,16 +89,25 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
     const [isCopying, setIsCopying] = useState(false);
     const [copiedGameId, setCopiedGameId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [completedSearchQuery, setCompletedSearchQuery] = useState("");
     const [isPlaying, setIsPlaying] = useState(false);
     const [playingGameId, setPlayingGameId] = useState<string | null>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isRefreshingCompleted, setIsRefreshingCompleted] = useState(false);
     const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+    const [lastCompletedRefreshed, setLastCompletedRefreshed] = useState<Date | null>(null);
 
-    // Pagination state
+    // Pagination state for created games
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [totalItems, setTotalItems] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
+
+    // Pagination state for completed games
+    const [completedCurrentPage, setCompletedCurrentPage] = useState(1);
+    const [completedPageSize, setCompletedPageSize] = useState(10);
+    const [completedTotalItems, setCompletedTotalItems] = useState(0);
+    const [completedTotalPages, setCompletedTotalPages] = useState(0);
 
     useEffect(() => {
         const checkAuthAndFetchGames = async () => {
@@ -110,9 +122,11 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                 if (session) {
                     isAuthenticated.current = true;
                     fetchUserGames();
+                    fetchCompletedGames();
                 } else {
                     isAuthenticated.current = false;
                     setIsLoading(false);
+                    setIsLoadingCompleted(false);
 
                     if (!hasShownAuthErrorToast.current) {
                         toast({
@@ -126,6 +140,7 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
             } catch (error) {
                 console.error('Error checking authentication:', error);
                 setIsLoading(false);
+                setIsLoadingCompleted(false);
             }
         };
 
@@ -137,9 +152,11 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                 isAuthenticated.current = true;
                 hasShownAuthErrorToast.current = false; // Reset toast flag on sign in
                 fetchUserGames();
+                fetchCompletedGames();
             } else if (event === 'SIGNED_OUT') {
                 isAuthenticated.current = false;
                 setGames([]);
+                setCompletedGames([]);
             }
         });
 
@@ -148,14 +165,21 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
         };
     }, []);
 
-    // Fetch games when pagination parameters change
+    // Fetch created games when pagination parameters change
     useEffect(() => {
         if (isAuthenticated.current) {
             fetchUserGames();
         }
     }, [currentPage, pageSize]);
 
-    // Debounced search effect
+    // Fetch completed games when pagination parameters change
+    useEffect(() => {
+        if (isAuthenticated.current) {
+            fetchCompletedGames();
+        }
+    }, [completedCurrentPage, completedPageSize]);
+
+    // Debounced search effect for created games
     useEffect(() => {
         if (!isAuthenticated.current) return;
 
@@ -165,6 +189,28 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
 
         return () => clearTimeout(handler);
     }, [searchQuery]);
+
+    // Debounced search effect for completed games
+    useEffect(() => {
+        if (!isAuthenticated.current) return;
+
+        const handler = setTimeout(() => {
+            fetchCompletedGames();
+        }, 300);
+
+        return () => clearTimeout(handler);
+    }, [completedSearchQuery]);
+
+    // Listen for tab changes to refresh data as needed
+    useEffect(() => {
+        if (!isAuthenticated.current) return;
+
+        if (activeTab === "created" && !lastRefreshed) {
+            fetchUserGames();
+        } else if (activeTab === "completed" && !lastCompletedRefreshed) {
+            fetchCompletedGames();
+        }
+    }, [activeTab]);
 
     const fetchUserGames = async () => {
         // Prevent too many fetch attempts
@@ -254,6 +300,97 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
             }
 
             setIsLoading(false);
+        }
+    };
+
+    const fetchCompletedGames = async () => {
+        // Prevent too many fetch attempts
+        if (fetchAttempts.current >= maxFetchAttempts) {
+            setIsLoadingCompleted(false);
+            return;
+        }
+
+        fetchAttempts.current += 1;
+        setIsLoadingCompleted(true);
+
+        try {
+            // Try to refresh the session if needed
+            const session = await refreshSessionIfNeeded();
+
+            if (!session) {
+                if (!hasShownAuthErrorToast.current) {
+                    toast({
+                        title: 'Authentication required',
+                        description: 'Please log in to view your completed games',
+                        variant: 'destructive',
+                    });
+                    hasShownAuthErrorToast.current = true;
+                }
+                setIsLoadingCompleted(false);
+                return;
+            }
+
+            // Build URL with pagination and search parameters
+            const url = new URL('/api/games/user/completed', window.location.origin);
+            url.searchParams.append('page', completedCurrentPage.toString());
+            url.searchParams.append('page_size', completedPageSize.toString());
+
+            if (completedSearchQuery) {
+                url.searchParams.append('search', completedSearchQuery);
+            }
+
+            // Make the API request
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'Cache-Control': 'no-cache',
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    console.error('Authentication error when fetching completed games');
+                    isAuthenticated.current = false;
+
+                    if (!hasShownAuthErrorToast.current) {
+                        toast({
+                            title: 'Authentication error',
+                            description: 'Your session has expired. Please log in again.',
+                            variant: 'destructive',
+                        });
+                        hasShownAuthErrorToast.current = true;
+                    }
+
+                    setIsLoadingCompleted(false);
+                    return;
+                }
+
+                throw new Error(`Failed to fetch completed games: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.json() as PaginatedGamesResponse;
+
+            // Reset fetch attempts on successful fetch
+            fetchAttempts.current = 0;
+
+            setCompletedGames(data.games);
+            setIsLoadingCompleted(false);
+            setLastCompletedRefreshed(new Date());
+            setCompletedTotalItems(data.pagination.totalCount);
+            setCompletedTotalPages(data.pagination.totalPages);
+        } catch (error) {
+            console.error('Error fetching completed games:', error);
+
+            // Only show error toast once
+            if (!hasShownAuthErrorToast.current) {
+                toast({
+                    title: 'Error',
+                    description: 'Failed to fetch your completed games. Please try again later.',
+                    variant: 'destructive',
+                });
+                hasShownAuthErrorToast.current = true;
+            }
+
+            setIsLoadingCompleted(false);
         }
     };
 
@@ -401,9 +538,20 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
         }, 1000);
     };
 
+    const handleRefreshCompleted = () => {
+        setIsRefreshingCompleted(true);
+        fetchCompletedGames();
+        setTimeout(() => {
+            setIsRefreshingCompleted(false);
+        }, 1000);
+    };
+
     // Filter games based on search query
     // We're now using backend filtering, so we don't need to filter the games client-side
     const filteredGames = games;
+
+    // Filter completed games based on search query (we're using server-side filtering now)
+    const filteredCompletedGames = completedGames;
 
     if (!user) {
         return (
@@ -618,62 +766,6 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                                                                             <p>Copy Game Link</p>
                                                                         </TooltipContent>
                                                                     </Tooltip>
-
-                                                                    <Tooltip>
-                                                                        <TooltipTrigger asChild>
-                                                                            <AlertDialog open={gameToDelete === game.id} onOpenChange={(open: boolean) => !open && setGameToDelete(null)}>
-                                                                                <AlertDialogTrigger asChild>
-                                                                                    <Button
-                                                                                        variant="outline"
-                                                                                        size="icon"
-                                                                                        onClick={(e) => {
-                                                                                            e.preventDefault();
-                                                                                            e.stopPropagation();
-                                                                                            confirmDelete(game.id, e);
-                                                                                            return false;
-                                                                                        }}
-                                                                                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                                                                        type="button"
-                                                                                    >
-                                                                                        <Trash2 className="h-4 w-4" />
-                                                                                    </Button>
-                                                                                </AlertDialogTrigger>
-                                                                                <AlertDialogContent className="bg-white">
-                                                                                    <AlertDialogHeader>
-                                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                                                        <AlertDialogDescription>
-                                                                                            This action cannot be undone. This will permanently delete the game.
-                                                                                        </AlertDialogDescription>
-                                                                                    </AlertDialogHeader>
-                                                                                    <AlertDialogFooter>
-                                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                                        <AlertDialogAction
-                                                                                            onClick={(e: React.MouseEvent) => {
-                                                                                                e.preventDefault();
-                                                                                                e.stopPropagation();
-                                                                                                handleDeleteGame(game.id, e);
-                                                                                                return false;
-                                                                                            }}
-                                                                                            disabled={isDeleting}
-                                                                                            className="bg-red-500 hover:bg-red-700"
-                                                                                        >
-                                                                                            {isDeleting ? (
-                                                                                                <>
-                                                                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                                                                    Deleting...
-                                                                                                </>
-                                                                                            ) : (
-                                                                                                "Delete"
-                                                                                            )}
-                                                                                        </AlertDialogAction>
-                                                                                    </AlertDialogFooter>
-                                                                                </AlertDialogContent>
-                                                                            </AlertDialog>
-                                                                        </TooltipTrigger>
-                                                                        <TooltipContent>
-                                                                            <p>Delete Game</p>
-                                                                        </TooltipContent>
-                                                                    </Tooltip>
                                                                 </TooltipProvider>
                                                             </div>
                                                         </TableCell>
@@ -743,9 +835,211 @@ export const UserGamesList = ({ user }: UserGamesListProps) => {
                     </TabsContent>
 
                     <TabsContent value="completed">
-                        <div className="text-center p-8 border border-gray-200 rounded-lg">
-                            <p className="text-gray-500">Completed games feature coming soon.</p>
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center">
+                                <h3 className="text-lg font-medium">Completed Games</h3>
+                                <span className="ml-2 text-sm text-muted-foreground">
+                                    ({completedGames.length} {completedGames.length === 1 ? 'game' : 'games'})
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleRefreshCompleted}
+                                    disabled={isRefreshingCompleted || isLoadingCompleted}
+                                    className="ml-2"
+                                    title={lastCompletedRefreshed ? `Last refreshed: ${lastCompletedRefreshed.toLocaleTimeString()}` : 'Refresh'}
+                                >
+                                    <RefreshCw className={`h-4 w-4 ${isRefreshingCompleted ? 'animate-spin' : ''}`} />
+                                    <span className="sr-only">Refresh</span>
+                                </Button>
+                                {lastCompletedRefreshed && (
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                        Updated: {lastCompletedRefreshed.toLocaleTimeString()}
+                                    </span>
+                                )}
+                            </div>
                         </div>
+
+                        {isLoadingCompleted ? (
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                    <Skeleton className="h-10 w-full" />
+                                </div>
+                                <div className="rounded-md border">
+                                    <div className="h-[300px] w-full flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mlb-blue"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : completedGames.length === 0 ? (
+                            <div className="text-center p-8 border border-gray-200 rounded-lg">
+                                <p className="text-gray-500">You haven't completed any games yet.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="relative mb-4">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search completed games by player name..."
+                                        className="pl-8"
+                                        value={completedSearchQuery}
+                                        onChange={(e) => {
+                                            const newValue = e.target.value;
+                                            setCompletedSearchQuery(newValue);
+                                            // Reset to first page when searching
+                                            setCompletedCurrentPage(1);
+                                        }}
+                                    />
+                                </div>
+
+                                {filteredCompletedGames.length === 0 ? (
+                                    <div className="text-center p-8 border border-gray-200 rounded-lg">
+                                        <p className="text-gray-500">No games match your search.</p>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Player</TableHead>
+                                                    <TableHead>Completed</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredCompletedGames.map((game) => (
+                                                    <TableRow key={game.id}>
+                                                        <TableCell className="font-medium">
+                                                            {game.title}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {game.completion_date
+                                                                ? formatDistanceToNow(new Date(game.completion_date), { addSuffix: true })
+                                                                : formatDistanceToNow(new Date(game.created_at), { addSuffix: true })
+                                                            }
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end space-x-2">
+                                                                <TooltipProvider>
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="icon"
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    handlePlayGame(game.id, e);
+                                                                                    return false;
+                                                                                }}
+                                                                                className="h-8 w-8"
+                                                                                disabled={isPlaying && playingGameId === game.id}
+                                                                                type="button"
+                                                                            >
+                                                                                {isPlaying && playingGameId === game.id ? (
+                                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                ) : (
+                                                                                    <ExternalLink className="h-4 w-4" />
+                                                                                )}
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Play Game</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+
+                                                                    <Tooltip>
+                                                                        <TooltipTrigger asChild>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                size="icon"
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    handleCopyGameLink(game.id, e);
+                                                                                    return false;
+                                                                                }}
+                                                                                className="h-8 w-8"
+                                                                                disabled={isCopying && copiedGameId === game.id}
+                                                                                type="button"
+                                                                            >
+                                                                                {isCopying && copiedGameId === game.id ? (
+                                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                                ) : (
+                                                                                    <Copy className="h-4 w-4" />
+                                                                                )}
+                                                                            </Button>
+                                                                        </TooltipTrigger>
+                                                                        <TooltipContent>
+                                                                            <p>Copy Game Link</p>
+                                                                        </TooltipContent>
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                )}
+
+                                {/* Pagination Controls */}
+                                {completedTotalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-4">
+                                        <div className="text-sm text-muted-foreground">
+                                            Showing {completedGames.length} of {completedTotalItems} games
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCompletedCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={completedCurrentPage <= 1 || isLoadingCompleted}
+                                            >
+                                                Previous
+                                            </Button>
+                                            <div className="flex items-center space-x-1">
+                                                {Array.from({ length: Math.min(5, completedTotalPages) }, (_, i) => {
+                                                    // Show pages around current page
+                                                    let pageToShow;
+                                                    if (completedTotalPages <= 5) {
+                                                        pageToShow = i + 1;
+                                                    } else if (completedCurrentPage <= 3) {
+                                                        pageToShow = i + 1;
+                                                    } else if (completedCurrentPage >= completedTotalPages - 2) {
+                                                        pageToShow = completedTotalPages - 4 + i;
+                                                    } else {
+                                                        pageToShow = completedCurrentPage - 2 + i;
+                                                    }
+
+                                                    return (
+                                                        <Button
+                                                            key={pageToShow}
+                                                            variant={completedCurrentPage === pageToShow ? "default" : "outline"}
+                                                            size="sm"
+                                                            className="w-8 h-8 p-0"
+                                                            onClick={() => setCompletedCurrentPage(pageToShow)}
+                                                            disabled={isLoadingCompleted}
+                                                        >
+                                                            {pageToShow}
+                                                        </Button>
+                                                    );
+                                                })}
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCompletedCurrentPage(prev => Math.min(completedTotalPages, prev + 1))}
+                                                disabled={completedCurrentPage >= completedTotalPages || isLoadingCompleted}
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </TabsContent>
                 </Tabs>
             </CardContent>

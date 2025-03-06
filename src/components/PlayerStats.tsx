@@ -128,18 +128,27 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                 setPitchingStats(data.pitchingStats);
 
                 if (configurable) {
+                    // Initialize with all info keys deselected (red)
                     onStatsChange('info', [], Object.keys(data.playerInfo));
 
-                    if (data.hittingStats.length > 0 && selectedHittingStats.length === 0) {
-                        // Initialize with all available keys when no selection exists
-                        const hittingKeys = Object.keys(data.hittingStats[0]);
-                        onStatsChange('hitting', hittingKeys, []);
+                    if (data.hittingStats.length > 0) {
+                        if (selectedHittingStats.length === 0 && deselectedHittingStats.length === 0) {
+                            // Get all keys from the first hitting stats record that have mappings
+                            const hittingKeys = Object.keys(data.hittingStats[0])
+                                .filter(key => key in hittingStatMappings);
+                            // Initialize hitting stats as all selected (green)
+                            onStatsChange('hitting', hittingKeys, []);
+                        }
                     }
 
-                    if (data.pitchingStats.length > 0 && selectedPitchingStats.length === 0) {
-                        // Initialize with all available keys when no selection exists
-                        const pitchingKeys = Object.keys(data.pitchingStats[0]);
-                        onStatsChange('pitching', pitchingKeys, []);
+                    if (data.pitchingStats.length > 0) {
+                        if (selectedPitchingStats.length === 0 && deselectedPitchingStats.length === 0) {
+                            // Get all keys from the first pitching stats record that have mappings
+                            const pitchingKeys = Object.keys(data.pitchingStats[0])
+                                .filter(key => key in pitchingStatMappings);
+                            // Initialize pitching stats as all selected (green)
+                            onStatsChange('pitching', pitchingKeys, []);
+                        }
                     }
                 }
             } catch (error) {
@@ -209,11 +218,11 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         let deselectedKeys: string[] = [];
 
         if (type === 'info' && playerInfo) {
-            allKeys = Object.keys(playerInfo);
+            allKeys = getSortedKeys(playerInfo, playerInfoMappings);
         } else if (type === 'hitting' && hittingStats.length > 0) {
-            allKeys = Object.keys(hittingStats[0]);
+            allKeys = getSortedKeys(hittingStats[0], hittingStatMappings);
         } else if (type === 'pitching' && pitchingStats.length > 0) {
-            allKeys = Object.keys(pitchingStats[0]);
+            allKeys = getSortedKeys(pitchingStats[0], pitchingStatMappings);
         }
 
         if (selectedKeys.length === 0) {
@@ -258,7 +267,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     const getSortedKeys = <T extends Record<string, any>>(obj: T, mappings: Record<string, StatMapping>): (keyof T)[] => {
         // Get all keys that exist in the mappings
         const mappedKeys = (Object.keys(obj) as (keyof T)[])
-            .filter(key => key in mappings)
+            .filter(key => key in mappings && mappings[String(key)])
             .sort((a, b) => (mappings[String(a)]?.order || 0) - (mappings[String(b)]?.order || 0));
 
         return mappedKeys;

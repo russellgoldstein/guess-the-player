@@ -379,7 +379,7 @@ const GamePage = () => {
     return (
         <PageWrapper>
             <div className="min-h-screen bg-white">
-                <div className="max-w-[1440px] w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+                <div className="max-w-[1440px] w-full mx-auto space-y-4 sm:space-y-6">
                     <div className="space-y-1.5 text-center">
                         <h1 className="text-3xl sm:text-4xl font-bold text-mlb-blue">Stat Attack</h1>
                         <p className="text-gray-600">Try to guess the player based on their stats.</p>

@@ -334,7 +334,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
     return (
         <>
             <style>{highlightClass}</style>
-            <div className="max-w-7xl mx-auto px-4 py-6 bg-white" data-testid="player-stats">
+            <div className="mx-auto p-1.5 bg-white" data-testid="player-stats">
                 {/* Player Header */}
                 <div className="space-y-6 mb-8">
                     <div className="flex gap-6">
@@ -401,7 +401,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                     }
                     className="w-full"
                 >
-                    <TabsList className="w-full justify-start border-b border-gray-200 bg-transparent mb-6 gap-2">
+                    <TabsList className="w-full justify-start border-b border-gray-200 bg-transparent mb-6 gap-2 px-0">
                         {hasVisibleHitting && (
                             <TabsTrigger
                                 value="hitting"
@@ -421,164 +421,154 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                     </TabsList>
 
                     {hasVisibleHitting && (
-                        <TabsContent value="hitting">
-                            <Card className="border-gray-100 shadow-sm">
-                                <CardHeader className="border-b border-gray-100 bg-gray-50 pb-4">
-                                    <CardTitle className="flex items-center justify-between text-mlb-blue">
-                                        Hitting Statistics
-                                        {configurable && (
-                                            <SectionToggle
-                                                title=""
-                                                configurable={configurable}
-                                                allKeys={sortedHittingKeys}
-                                                selectedKeys={selectedHittingStats}
-                                                onToggleAll={(keys) => {
-                                                    handleToggleAll('hitting', keys);
-                                                }}
-                                            />
-                                        )}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0 pt-4 w-full">
-                                    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                        <Table className="w-full table-auto">
-                                            <TableHeader>
-                                                <TableRow className="bg-gray-50 border-b border-gray-100">
-                                                    {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map((key) => (
-                                                        <TableHead
-                                                            key={key}
-                                                            className="text-left whitespace-nowrap font-medium text-gray-600 py-2 px-2 first:pl-4 last:pr-4 text-xs"
-                                                        >
-                                                            <ConfigurableHeader
-                                                                statKey={key}
-                                                                displayName={hittingStatMappings[key]?.label || key}
-                                                                configurable={configurable}
-                                                                selected={selectedHittingStats}
-                                                                deselected={deselectedHittingStats}
-                                                                onToggle={(key) => handleToggle(key, 'hitting')}
-                                                            />
-                                                        </TableHead>
-                                                    ))}
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {hittingStats.map((stat, index) => {
-                                                    const visibleStats = filterVisibleStats<HittingStats>(stat as HittingStats, selectedHittingStats);
-                                                    const visibleKeys = getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats);
-                                                    return (
-                                                        <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                            {visibleKeys.map(key => (
-                                                                <TableCell
-                                                                    key={key}
-                                                                    className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
-                                                                        ? 'text-mlb-blue font-bold'
-                                                                        : 'text-gray-700'
-                                                                        } ${newlyRevealedHitting.has(key) ? 'highlight-reveal' : ''}`}
-                                                                >
-                                                                    {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
-                                                                        <ResponsiveTooltip
-                                                                            content={<p>{visibleStats.teamDetails}</p>}
-                                                                            side="top"
-                                                                            contentClassName="bg-white border border-gray-200 shadow-md"
-                                                                        >
-                                                                            <span className="underline decoration-dotted cursor-help">
-                                                                                {String(visibleStats[key as keyof typeof visibleStats] || '')}
-                                                                            </span>
-                                                                        </ResponsiveTooltip>
-                                                                    ) : (
-                                                                        visibleStats[key as keyof typeof visibleStats] === 0 ? "0" : String(visibleStats[key as keyof typeof visibleStats] || '')
-                                                                    )}
-                                                                </TableCell>
-                                                            ))}
-                                                        </TableRow>
-                                                    );
-                                                })}
-                                            </TableBody>
-                                        </Table>
+                        <TabsContent value="hitting" className="px-0 p-0">
+                            <div className="space-y-4">
+                                {configurable && (
+                                    <div className="flex justify-end">
+                                        <SectionToggle
+                                            title=""
+                                            configurable={configurable}
+                                            allKeys={sortedHittingKeys}
+                                            selectedKeys={selectedHittingStats}
+                                            onToggleAll={(keys) => {
+                                                handleToggleAll('hitting', keys);
+                                            }}
+                                        />
                                     </div>
-                                </CardContent>
-                            </Card>
+                                )}
+                                <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                    <Table className="w-full table-auto border-collapse">
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50 border-b border-gray-100">
+                                                {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map((key) => (
+                                                    <TableHead
+                                                        key={key}
+                                                        className="text-left whitespace-nowrap font-medium text-gray-600 py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[10px] sm:text-xs border border-gray-100"
+                                                    >
+                                                        <ConfigurableHeader
+                                                            statKey={key}
+                                                            displayName={hittingStatMappings[key]?.label || key}
+                                                            configurable={configurable}
+                                                            selected={selectedHittingStats}
+                                                            deselected={deselectedHittingStats}
+                                                            onToggle={(key) => handleToggle(key, 'hitting')}
+                                                        />
+                                                    </TableHead>
+                                                ))}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {hittingStats.map((stat, index) => {
+                                                const visibleStats = filterVisibleStats<HittingStats>(stat as HittingStats, selectedHittingStats);
+                                                const visibleKeys = getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats);
+                                                return (
+                                                    <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
+                                                        {visibleKeys.map(key => (
+                                                            <TableCell
+                                                                key={key}
+                                                                className={`text-left whitespace-nowrap font-medium py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[11px] sm:text-sm border border-gray-100 ${key === 'awards'
+                                                                    ? 'text-mlb-blue font-bold'
+                                                                    : 'text-gray-700'
+                                                                    } ${newlyRevealedHitting.has(key) ? 'highlight-reveal' : ''}`}
+                                                            >
+                                                                {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
+                                                                    <ResponsiveTooltip
+                                                                        content={<p>{visibleStats.teamDetails}</p>}
+                                                                        side="top"
+                                                                        contentClassName="bg-white border border-gray-200 shadow-md"
+                                                                    >
+                                                                        <span className="underline decoration-dotted cursor-help">
+                                                                            {String(visibleStats[key as keyof typeof visibleStats] || '')}
+                                                                        </span>
+                                                                    </ResponsiveTooltip>
+                                                                ) : (
+                                                                    visibleStats[key as keyof typeof visibleStats] === 0 ? "0" : String(visibleStats[key as keyof typeof visibleStats] || '')
+                                                                )}
+                                                            </TableCell>
+                                                        ))}
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
                         </TabsContent>
                     )}
 
                     {hasVisiblePitching && (
-                        <TabsContent value="pitching">
-                            <Card className="border-gray-100 shadow-sm">
-                                <CardHeader className="border-b border-gray-100 bg-gray-50 pb-4">
-                                    <CardTitle className="flex items-center justify-between text-mlb-blue">
-                                        Pitching Statistics
-                                        {configurable && (
-                                            <SectionToggle
-                                                title=""
-                                                configurable={configurable}
-                                                allKeys={sortedPitchingKeys}
-                                                selectedKeys={selectedPitchingStats}
-                                                onToggleAll={(keys) => {
-                                                    handleToggleAll('pitching', keys);
-                                                }}
-                                            />
-                                        )}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-0 pt-4 w-full">
-                                    <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                                        <Table className="w-full table-auto">
-                                            <TableHeader>
-                                                <TableRow className="bg-gray-50 border-b border-gray-100">
-                                                    {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map((key) => (
-                                                        <TableHead
-                                                            key={key}
-                                                            className="text-left whitespace-nowrap font-medium text-gray-600 py-2 px-2 first:pl-4 last:pr-4 text-xs"
-                                                        >
-                                                            <ConfigurableHeader
-                                                                statKey={key}
-                                                                displayName={pitchingStatMappings[key]?.label || key}
-                                                                configurable={configurable}
-                                                                selected={selectedPitchingStats}
-                                                                deselected={deselectedPitchingStats}
-                                                                onToggle={(key) => handleToggle(key, 'pitching')}
-                                                            />
-                                                        </TableHead>
-                                                    ))}
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {pitchingStats.map((stat, index) => {
-                                                    const visibleStats = filterVisibleStats<PitchingStats>(stat as PitchingStats, selectedPitchingStats);
-                                                    const visibleKeys = getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats);
-                                                    return (
-                                                        <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
-                                                            {visibleKeys.map(key => (
-                                                                <TableCell
-                                                                    key={key}
-                                                                    className={`text-left whitespace-nowrap font-medium py-2 px-2 first:pl-4 last:pr-4 text-sm ${key === 'awards'
-                                                                        ? 'text-mlb-blue font-bold'
-                                                                        : 'text-gray-700'
-                                                                        } ${newlyRevealedPitching.has(key) ? 'highlight-reveal' : ''}`}
-                                                                >
-                                                                    {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
-                                                                        <ResponsiveTooltip
-                                                                            content={<p>{visibleStats.teamDetails}</p>}
-                                                                            side="top"
-                                                                            contentClassName="bg-white border border-gray-200 shadow-md"
-                                                                        >
-                                                                            <span className="underline decoration-dotted cursor-help">
-                                                                                {String(visibleStats[key as keyof typeof visibleStats] || '')}
-                                                                            </span>
-                                                                        </ResponsiveTooltip>
-                                                                    ) : (
-                                                                        visibleStats[key as keyof typeof visibleStats] === 0 ? "0" : String(visibleStats[key as keyof typeof visibleStats] || '')
-                                                                    )}
-                                                                </TableCell>
-                                                            ))}
-                                                        </TableRow>
-                                                    );
-                                                })}
-                                            </TableBody>
-                                        </Table>
+                        <TabsContent value="pitching" className="px-0">
+                            <div className="space-y-4">
+                                {configurable && (
+                                    <div className="flex justify-end">
+                                        <SectionToggle
+                                            title=""
+                                            configurable={configurable}
+                                            allKeys={sortedPitchingKeys}
+                                            selectedKeys={selectedPitchingStats}
+                                            onToggleAll={(keys) => {
+                                                handleToggleAll('pitching', keys);
+                                            }}
+                                        />
                                     </div>
-                                </CardContent>
-                            </Card>
+                                )}
+                                <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                                    <Table className="w-full table-auto border-collapse">
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50 border-b border-gray-100">
+                                                {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map((key) => (
+                                                    <TableHead
+                                                        key={key}
+                                                        className="text-left whitespace-nowrap font-medium text-gray-600 py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[10px] sm:text-xs border border-gray-100"
+                                                    >
+                                                        <ConfigurableHeader
+                                                            statKey={key}
+                                                            displayName={pitchingStatMappings[key]?.label || key}
+                                                            configurable={configurable}
+                                                            selected={selectedPitchingStats}
+                                                            deselected={deselectedPitchingStats}
+                                                            onToggle={(key) => handleToggle(key, 'pitching')}
+                                                        />
+                                                    </TableHead>
+                                                ))}
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {pitchingStats.map((stat, index) => {
+                                                const visibleStats = filterVisibleStats<PitchingStats>(stat as PitchingStats, selectedPitchingStats);
+                                                const visibleKeys = getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats);
+                                                return (
+                                                    <TableRow key={index} className="hover:bg-gray-50 border-b border-gray-100">
+                                                        {visibleKeys.map(key => (
+                                                            <TableCell
+                                                                key={key}
+                                                                className={`text-left whitespace-nowrap font-medium py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[11px] sm:text-sm border border-gray-100 ${key === 'awards'
+                                                                    ? 'text-mlb-blue font-bold'
+                                                                    : 'text-gray-700'
+                                                                    } ${newlyRevealedPitching.has(key) ? 'highlight-reveal' : ''}`}
+                                                            >
+                                                                {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
+                                                                    <ResponsiveTooltip
+                                                                        content={<p>{visibleStats.teamDetails}</p>}
+                                                                        side="top"
+                                                                        contentClassName="bg-white border border-gray-200 shadow-md"
+                                                                    >
+                                                                        <span className="underline decoration-dotted cursor-help">
+                                                                            {String(visibleStats[key as keyof typeof visibleStats] || '')}
+                                                                        </span>
+                                                                    </ResponsiveTooltip>
+                                                                ) : (
+                                                                    visibleStats[key as keyof typeof visibleStats] === 0 ? "0" : String(visibleStats[key as keyof typeof visibleStats] || '')
+                                                                )}
+                                                            </TableCell>
+                                                        ))}
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
                         </TabsContent>
                     )}
                 </Tabs>

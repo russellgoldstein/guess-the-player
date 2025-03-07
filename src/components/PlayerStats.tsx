@@ -284,6 +284,15 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
         return allKeys.filter(key => selected.includes(key) && key !== 'teamDetails');
     };
 
+    // Add this helper function before the return statement
+    const isNumericStat = (key: string, type: 'info' | 'hitting' | 'pitching'): boolean => {
+        // Text-based stats that should be left-aligned
+        const textStats = ['team', 'teamDetails', 'season', 'awards'];
+        if (textStats.includes(key)) return false;
+
+        return true;
+    };
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px] bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -443,7 +452,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                 {getVisibleKeys(sortedHittingKeys, selectedHittingStats, deselectedHittingStats).map((key) => (
                                                     <TableHead
                                                         key={key}
-                                                        className="text-left whitespace-nowrap font-medium text-gray-600 py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[10px] sm:text-xs border border-gray-100"
+                                                        className={`whitespace-nowrap font-medium text-gray-600 py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[10px] sm:text-xs border border-gray-100 ${isNumericStat(key, 'hitting') ? 'text-right' : 'text-left'}`}
                                                     >
                                                         <ConfigurableHeader
                                                             statKey={key}
@@ -466,9 +475,11 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                         {visibleKeys.map(key => (
                                                             <TableCell
                                                                 key={key}
-                                                                className={`text-left whitespace-nowrap font-medium py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[11px] sm:text-sm border border-gray-100 ${key === 'awards'
-                                                                    ? 'text-mlb-blue font-bold'
-                                                                    : 'text-gray-700'
+                                                                className={`whitespace-nowrap font-medium py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[11px] sm:text-sm border border-gray-100 ${key === 'awards'
+                                                                    ? 'text-mlb-blue font-bold text-left'
+                                                                    : isNumericStat(key, 'hitting')
+                                                                        ? 'text-gray-700 text-right'
+                                                                        : 'text-gray-700 text-left'
                                                                     } ${newlyRevealedHitting.has(key) ? 'highlight-reveal' : ''}`}
                                                             >
                                                                 {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (
@@ -519,7 +530,7 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                 {getVisibleKeys(sortedPitchingKeys, selectedPitchingStats, deselectedPitchingStats).map((key) => (
                                                     <TableHead
                                                         key={key}
-                                                        className="text-left whitespace-nowrap font-medium text-gray-600 py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[10px] sm:text-xs border border-gray-100"
+                                                        className={`whitespace-nowrap font-medium text-gray-600 py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[10px] sm:text-xs border border-gray-100 ${isNumericStat(key, 'pitching') ? 'text-right' : 'text-left'}`}
                                                     >
                                                         <ConfigurableHeader
                                                             statKey={key}
@@ -542,9 +553,11 @@ const PlayerStats: React.FC<PlayerStatsProps> = ({
                                                         {visibleKeys.map(key => (
                                                             <TableCell
                                                                 key={key}
-                                                                className={`text-left whitespace-nowrap font-medium py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[11px] sm:text-sm border border-gray-100 ${key === 'awards'
-                                                                    ? 'text-mlb-blue font-bold'
-                                                                    : 'text-gray-700'
+                                                                className={`whitespace-nowrap font-medium py-1 sm:py-2 px-1 sm:px-2 first:pl-2 sm:first:pl-4 last:pr-2 sm:last:pr-4 text-[11px] sm:text-sm border border-gray-100 ${key === 'awards'
+                                                                    ? 'text-mlb-blue font-bold text-left'
+                                                                    : isNumericStat(key, 'pitching')
+                                                                        ? 'text-gray-700 text-right'
+                                                                        : 'text-gray-700 text-left'
                                                                     } ${newlyRevealedPitching.has(key) ? 'highlight-reveal' : ''}`}
                                                             >
                                                                 {key === 'team' && visibleStats.teamDetails && visibleStats.teamDetails !== visibleStats.team ? (

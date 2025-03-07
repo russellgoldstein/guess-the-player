@@ -1,4 +1,4 @@
-import { PlayerInfo, HittingStats, PitchingStats } from '../types/player';
+import type { PlayerInfo, HittingStats, PitchingStats } from '../types/player';
 
 export const MLB_API_BASE_URL = 'https://statsapi.mlb.com/api/v1';
 
@@ -89,6 +89,18 @@ export const ALLOWED_AWARD_IDS = [
     // Hall of Fame
     'MLBHOF'   // MLB Hall of Fame
 ];
+
+export const AWARD_IDS = [
+    'ALCY',   // AL Cy Young
+    'NLCY',   // NL Cy Young
+    'MLBHOF', // Hall of Fame
+    'ALMVP',  // AL MVP
+    'NLMVP',  // NL MVP
+    'ALROY',  // AL Rookie of the Year
+    'NLROY',  // NL Rookie of the Year
+    'WSMVP',  // World Series MVP
+    'ASMVP'   // All Star MVP
+] as const;
 
 export const filterPlayerInfo = (playerData: any, awardsData: any[] = []): Partial<PlayerInfo> => {
     const filteredData = { ...playerData };
@@ -278,6 +290,66 @@ export const filterAndMapAwards = (awardsData: any[]): Record<string, string[]> 
     return awardsBySeason;
 };
 
+interface AwardWinner {
+    playerId: number;
+    playerName: string;
+}
+
+interface MLBApiResponse {
+    awards?: Array<{
+        player?: {
+            id: number;
+            nameFirstLast: string;
+        };
+    }>;
+    people?: Array<{
+        id: number;
+        awards?: any[];
+        birthDate?: string;
+        stats?: Array<{
+            splits: StatEntry[];
+        }>;
+    }>;
+}
+
+export const fetchAwardWinners = async (): Promise<AwardWinner[]> => {
+    try {
+        const uniquePlayers = new Set<number>();
+        const winners: AwardWinner[] = [];
+
+        const awardPromises = AWARD_IDS.map(awardId =>
+            fetch(`${MLB_API_BASE_URL}/awards/${awardId}/recipients`)
+                .then(response => response.json())
+                .then((data: unknown) => {
+                    const apiResponse = data as MLBApiResponse;
+                    if (apiResponse.awards) {
+                        apiResponse.awards.forEach((award) => {
+                            if (award.player && award.player.id && award.player.nameFirstLast) {
+                                if (!uniquePlayers.has(award.player.id)) {
+                                    uniquePlayers.add(award.player.id);
+                                    winners.push({
+                                        playerId: award.player.id,
+                                        playerName: award.player.nameFirstLast
+                                    });
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error fetching award ${awardId}:`, error);
+                    return [];
+                })
+        );
+
+        await Promise.all(awardPromises);
+        return winners;
+    } catch (error) {
+        console.error('Error fetching award winners:', error);
+        throw error;
+    }
+};
+
 export const fetchPlayerData = async (playerId: string | number) => {
     try {
         const [playerResponse, pitchingResponse] = await Promise.all([
@@ -286,8 +358,8 @@ export const fetchPlayerData = async (playerId: string | number) => {
         ]);
 
         const [playerData, pitchingData] = await Promise.all([
-            playerResponse.json(),
-            pitchingResponse.json()
+            playerResponse.json() as Promise<MLBApiResponse>,
+            pitchingResponse.json() as Promise<MLBApiResponse>
         ]);
 
         const result = {
@@ -298,14 +370,11 @@ export const fetchPlayerData = async (playerId: string | number) => {
         };
 
         if (playerData.people?.[0]) {
-            // Process awards data first so we can use it in filterPlayerInfo
             const awardsData = playerData.people[0].awards || [];
             result.awards = filterAndMapAwards(awardsData);
 
-            // Get the player's birth date
             const birthDate = playerData.people[0].birthDate;
 
-            // Pass the awards data to filterPlayerInfo
             result.playerInfo = filterPlayerInfo(playerData.people[0], awardsData);
 
             if (playerData.people[0].stats?.[0]?.splits) {

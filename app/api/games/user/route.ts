@@ -22,7 +22,8 @@ export async function GET(request: Request) {
         const offset = (validatedPage - 1) * validatedPageSize;
 
         // Create Supabase client with server-side cookies using the auth-helpers
-        const supabase = createRouteHandlerClient({ cookies });
+        const cookieStore = await cookies();
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -104,7 +105,8 @@ export async function DELETE(request: Request) {
         }
 
         // Create Supabase client with server-side cookies using the auth-helpers
-        const supabase = createRouteHandlerClient({ cookies });
+        const cookieStore = await cookies();
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
